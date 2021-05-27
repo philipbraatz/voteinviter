@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html lang="en">
+
+
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta content="Cleaning Company Website Template" name="keywords">
+    <meta content="Cleaning Company Website Template" name="description">
+    <link href="img/favicon.ico" rel="icon">
+
+
+    <title>{% block title %}{% endblock%}</title>
+    {% block links %} {% endblock %}
+</head>
+
+<body>
+    <header>{% block header %}{% endblock%}</header>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %} {% if category == 'error' %}
+
+    <div class="alert alert-danger alter-dismissable fade show" role="alert">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    {% else %}
+    <div class="alert alert-success alter-dismissable fade show" role="alert">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    {% endif %} {% endfor %} {% endif %} {% endwith %}
+    <div class="body">{%block body%}{%endblock%}</div>
+
+    <footer>{% block footer %}{% endblock%}</footer>
+</body>
+
+</html>

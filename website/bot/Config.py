@@ -32,7 +32,7 @@ class Config():
         pass
 
     def load(self):
-        with open("appdata\\config.json", "r") as read_file:
+        with open("bot\\appdata\\config.json", "r") as read_file:
             data = json.loads(read_file.read())
             print("Config: "+str(data))
             voteMode      = data["voteMode"]
@@ -43,9 +43,9 @@ class Config():
         pass
 
     def save(self):
-        with open("appdata\\config.json", "w") as write_file:
+        with open("bot\\appdata\\config.json", "w") as write_file:
             json.dump(self.__dict__,write_file)
             #write_file.write(json.dump(temp))
         pass
 
-Config()
+#Config()

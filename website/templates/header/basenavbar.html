@@ -1,0 +1,30 @@
+<button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+<div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+    <div class="navbar-nav ml-auto">
+        <a href="index.html" class="nav-item nav-link active">Home</a> {%for link in linkList%} {%if link.dropdown%}
+        <div class="nav-item dropdown">
+            <a href="{{link.href}}" class="nav-link dropdown-toggle" data-toggle="dropdown">{{link.desc}}</a>
+
+            <div class="dropdown-menu">
+                {%for dlink in link.dropdown%} {%if not dlink.port%}
+                <a href="{{dlink.href}}" class="dropdown-item">{{dlink.desc}} dd link</a> {%else%}
+                <a href="{{dlink.href}}" onclick="{{dlink.javascript}}" class="dropdown-item">{{dlink.desc}}</a> {%endif%} {%endfor%}
+            </div>
+        </div>
+        {%else%}
+        <a href="{{link.href}}" class="nav-item nav-link">{{link.desc}}</a> {%endif%} {%endfor%}
+        <!--
+        <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">Web Framework</a>
+            <div class="dropdown-menu">
+                <a href="#" class="dropdown-item" onclick="javascript:window.location.port=84">Flask (Python)</a>
+                <a href="#" class="dropdown-item" onclick="javascript:window.location.port=83">Default</a>
+            </div>
+        </div>-->
+
+        <!--<a href="#" class="btn">Get A Quote</a>-->
+    </div>
+</div>
