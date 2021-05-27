@@ -1,12 +1,11 @@
 from flask import Blueprint, render_template, redirect, request
 from flask_login import login_required, current_user
 from pathlib import Path
-from oauth import Oauth
+from .oauth import Oauth
 
 views = Blueprint('views',__name__)
 
 def internalRender(file):
-    #return Path(__file__)
     reader = open("templates/"+file, "r")
     headlinks = reader.read()
     reader.close()

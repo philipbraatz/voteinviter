@@ -1,3 +1,4 @@
+from os import getenv
 import requests
 
 class Oauth(object):
@@ -5,9 +6,9 @@ class Oauth(object):
 
 
     client_id = "845702724032397382"
-    client_secret = "zdqiDbhSsZdYH-G1yQqJbwXGucyfSqPf"
+    client_secret = getenv("OAUTH_CLIENT_TOKEN","")
     scope = "identify%20guilds.join"
-    redirect_uri = "http://127.0.0.1:84/discordlogin"
+    redirect_uri = "http://127.0.0.1:84/discordlogin"#TODO - get from config?
     discord_login_url = DISCORD_API+"oauth2/authorize?client_id={}&redirect_uri={}&response_type=code&scope={}".format(client_id,redirect_uri,scope)
     discord_token_url = DISCORD_API+"oauth2/token"
     @staticmethod
