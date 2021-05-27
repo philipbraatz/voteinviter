@@ -17,7 +17,7 @@
 ### v2 Tropical Refactor
 
 - [x] Refactor workspace
-- [ ] Refactor Configs
+- [x] Refactor Configs
 
 ### v1 DoorFail Setup
 

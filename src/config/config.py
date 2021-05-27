@@ -8,6 +8,9 @@ class WebsiteConfig:
     def __init__(self):
         self.SECRET_KEY = None
         self.PORT = None
+        self.IP = 0
+        self.DEBUG = ""
+        self.WEBSITE_FOLDER = ""
         self.filepath = "src\\config\\webconfig.ini"
         self.load()
 
@@ -21,13 +24,15 @@ class WebsiteConfig:
         for sect in config_object.sections():
             print('Section:', sect)
             for k,v in config_object.items(sect):
+                k = k.upper()
                 print(' {} = {}'.format(k,v))
-                if(k =='secret_key'):
-                    self.SECRET_KEY = v
-                elif(k == 'port'):
-                    self.PORT = v
-        if(self.SECRET_KEY == None or self.PORT == None):
-            raise Exception("Website config does not have any sections")
+                if(v.isdigit()):
+                    v = int(v)
+                elif(v.isnumeric()):
+                    v = float(v)
+                setattr(self,k,v)
+        if(self.IP == None or self.PORT == None or self.DEBUG == None):
+            raise Exception("Website config does not have any sections or not all content found in config")
         print("Finished Loading Website Config")
 
 class BotConfig():
@@ -37,13 +42,13 @@ class BotConfig():
         self.config_object = None
 
         # SETTINGS Config
-        self.voteMode = int(Mode.Difference)# Voting has 2 modes
-        self.votePing = "<@845723264550830100>" # TODO - Don't use static values!!
-        self.minVotes = 3
+        self.vote_mode = int(Mode.Difference)# Voting has 2 modes
+        self.vote_ping = "<@845723264550830100>" # TODO - Don't use static values!!
+        self.min_vote = 3
         # Difference Configs
-        self.minApprove = 2
+        self.min_approve = 2
         # Percentage Configs
-        self.minPercentage = 0.6
+        self.min_percentage = 0.6
 
         # BOT Config
         self.MASTER_SERVER   = 0
@@ -68,6 +73,8 @@ class BotConfig():
         for sect in self.config_object.sections():
             print('Section:', sect)
             for k,v in self.config_object.items(sect):
+                if(sect == "Bot"):
+                    k = k.upper()
                 print(' {} = {}'.format(k,v)) #Debug
                 if(v.isdigit()):
                     v = int(v)
@@ -84,11 +91,11 @@ class BotConfig():
             self.config_object.add_section("Settings")
             # Capiltisation needs to be same as variable names above
             # Due to how the config is read
-            self.config_object.set("Settings","voteMode", str(self.voteMode)) 
-            self.config_object.set("Settings","votePing", str(self.votePing))
-            self.config_object.set("Settings","minApprove", str(self.minApprove))
-            self.config_object.set("Settings","minPercentage", str(self.minPercentage))
-            self.config_object.set("Settings","minVotes", str(self.minVotes))
+            self.config_object.set("Settings","vote_mode", str(self.vote_mode)) 
+            self.config_object.set("Settings","vote_ping", str(self.vote_ping))
+            self.config_object.set("Settings","min_approve", str(self.min_approve))
+            self.config_object.set("Settings","min_percentage", str(self.min_percentage))
+            self.config_object.set("Settings","min_votes", str(self.min_votes))
             # Bot config Section
             self.config_object.set("Bot","MASTER_SERVER",str(self.MASTER_SERVER))
             self.config_object.set("Bot","VOTING_CHANNEL",str(self.VOTING_CHANNEL))

@@ -13,7 +13,7 @@ class Voting(Cog):
 
         #TODO - Heads up, Pings don't work in Embeds... to get around send the ping in the message using .send(content=ping) then edit the message with msg.edit(content="")
         emb = Embed(title="VOTE: "+name,
-            description=f"{self.bot.config.votingPing}\nDescription: {description}\n\
+            description=f"{self.bot.config.voting_ping}\nDescription: {description}\n\
                 \nReact with {self.bot.Tick} for heads\nReact with {self.bot.Cross} for tails",colour=Colour.blue())
         msg = await ctx.send(embed=emb)
         await msg.add_reaction(self.bot.Tick)
