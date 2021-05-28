@@ -1,5 +1,6 @@
-from website import main
+#from website import main
+
+from bot import mainbot
 
 
-
-main()
+#main()

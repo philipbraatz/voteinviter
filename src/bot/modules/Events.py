@@ -1,5 +1,6 @@
 from discord.ext.commands import Cog
 from discord.ext import commands
+from .__init__ import BOTCONFIG
 
 class Events(Cog):
     def __init__(self,bot):
@@ -10,7 +11,11 @@ class Events(Cog):
         guild = member.guild
         if(guild.id == self.bot.config.MASTER_SERVER):
             channel = guild.get_channel(self.bot.config.WELCOME_CHANNEL)
-            await channel.send(self.bot.config.WELCOME_MESSAGE.replace("%username%",member.mention))
+            message = self.bot.config.WELCOME_MESSAGE
+            message = message.replace("%username%",member.mention)
+            message = message.replace("%ruleschannel%",BOTCONFIG.)
+            message = message.replace("%roleschannel%",member.mention)
+            await channel.send()
 
     @commands.Cog.listener
     async def on_ready(self):
