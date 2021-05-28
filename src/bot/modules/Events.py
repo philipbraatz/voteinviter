@@ -10,7 +10,7 @@ class Events(Cog):
         guild = member.guild
         if(guild.id == self.bot.config.MASTER_SERVER):
             channel = guild.get_channel(self.bot.config.WELCOME_CHANNEL)
-            await channel.send(self.bot.config.WELCOME_MESSAGE.replace("%username%",member.mention))#member.mention
+            await channel.send(self.bot.config.WELCOME_MESSAGE.replace("%username%",member.mention))
 
     @commands.Cog.listener
     async def on_ready(self):

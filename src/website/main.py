@@ -1,4 +1,4 @@
-from config.config import WEBSITECONFIG
+import __init__
 from flask_login import LoginManager
 import bot.mainbot as bot
 from flask import Flask

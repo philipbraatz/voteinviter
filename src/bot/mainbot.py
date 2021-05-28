@@ -1,8 +1,7 @@
+import __init__
 from discord import Color, Embed, __version__ as discordVersion
 from discord.errors import LoginFailure
 from discord.ext.commands import Bot
-
-from config.config import BOTCONFIG
 
 from os import listdir, getenv
 from enum import Enum
