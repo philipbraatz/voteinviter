@@ -8,7 +8,7 @@ class Debug(Cog):
 
     #Debug commands ----------------------------
     @commands.command(name="msg")
-    async def privateMessage(self, ctx, user: User, *, words="There was no context :eyes:"):
+    async def privateMessage(self, ctx, user, *, words="There was no context :eyes:"):
         #await ctx.author.send("this is a test message")
         await user.send(f"{words}")
 

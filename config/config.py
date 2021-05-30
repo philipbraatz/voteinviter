@@ -1,5 +1,5 @@
 from os import getcwd, getenv, environ
-from bot.dataclasses.Mode import Mode
+from dataclasses.Mode import Modes
 from os.path import isfile
 import configparser
 import json
@@ -11,7 +11,7 @@ class WebsiteConfig:
         self.IP = 0
         self.DEBUG = ""
         self.WEBSITE_FOLDER = ""
-        self.filepath = "src\\config\\webconfig.ini"
+        self.filepath = "config\\webconfig.ini"
         self.load()
 
     def load(self):
@@ -41,7 +41,7 @@ class WebsiteConfig:
 class BotConfig():
 
     def __init__(self):
-        self.filepath = "src\\config\\botconfig.ini"
+        self.filepath = "config\\botconfig.ini"
 
         # SETTINGS Config (Filled with default values)
         self.vote_mode = int(Mode.Difference)# Voting has 2 modes
@@ -55,6 +55,8 @@ class BotConfig():
         # BOT Config
         self.MASTER_SERVER   = 0
         self.VOTING_CHANNEL  = 0
+        self.RULES_CHANNEL   = 0
+        self.ROLES_CHANNEL   = 0
         self.WELCOME_CHANNEL = 0
         self.WELCOME_MESSAGE = ""
         self.CURRENT_ELECT   = ""
@@ -67,12 +69,12 @@ class BotConfig():
         #read config file into object
         config_object.read(self.filepath)
         # print(str(config_object.sections()))
-        if(len(self.config_object.sections())<=0):
-            raise Exception("No content found in bot config")
+        if(len(config_object.sections())<=0):
+            raise Exception(f"No content found in bot config: {self.filepath}")
 
-        for sect in self.config_object.sections():
+        for sect in config_object.sections():
             print('Section:', sect)
-            for k,v in self.config_object.items(sect):
+            for k,v in config_object.items(sect):
                 if(sect == "Bot"):
                     k = k.upper()
                 print(' {} = {}'.format(k,v)) #Debug
@@ -84,27 +86,28 @@ class BotConfig():
         print("Finished Loading Config")
 
     def save(self):
-        if(self.config_object is None):
-            self.config_object = configparser.ConfigParser()
+        if(config_object is None):
+            config_object = configparser.ConfigParser()
             # Read config file into object
-            self.config_object.read(self.filepath)
-            self.config_object.add_section("Settings")
+            config_object.read(self.filepath)
+            config_object.add_section("Settings")
 
-            self.config_object.set("Settings","vote_mode",  str(self.vote_mode)) 
-            self.config_object.set("Settings","vote_ping",  str(self.vote_ping))
-            self.config_object.set("Settings","min_approve", str(self.min_approve))
-            self.config_object.set("Settings","min_percentage", str(self.min_percentage))
-            self.config_object.set("Settings","min_votes",  str(self.min_vote))
+            config_object.set("Settings","vote_mode",  str(self.vote_mode)) 
+            config_object.set("Settings","vote_ping",  str(self.vote_ping))
+            config_object.set("Settings","min_approve", str(self.min_approve))
+            config_object.set("Settings","min_percentage", str(self.min_percentage))
+            config_object.set("Settings","min_votes",  str(self.min_vote))
 
             # Bot config Section
-            self.config_object.add_section("Bot")
-            self.config_object.set("Bot","MASTER_SERVER",   str(self.MASTER_SERVER).lower())
-            self.config_object.set("Bot","VOTING_CHANNEL",  str(self.VOTING_CHANNEL).lower())
-            self.config_object.set("Bot","WELCOME_CHANNEL", str(self.WELCOME_CHANNEL).lower())
-            self.config_object.set("Bot","WELCOME_MESSAGE", str(self.WELCOME_MESSAGE).lower())
+            config_object.add_section("Bot")
+            config_object.set("Bot","MASTER_SERVER".lower(),   str(self.MASTER_SERVER))
+            config_object.set("Bot","VOTING_CHANNEL".lower(),  str(self.VOTING_CHANNEL))
+            config_object.set("Bot","WELCOME_CHANNEL".lower(), str(self.WELCOME_CHANNEL))
+            config_object.set("Bot","RULES_CHANNEL".lower(),   str(self.RULES_CHANNEL))
+            config_object.set("Bot","ROLES_CHANNEL".lower(),   str(self.ROLES_CHANNEL))
                        
         with open(self.filepath, "w") as write_file:
-            self.config_object.write(write_file)
+            config_object.write(write_file)
         pass
 class PrivateConfig:
     #loaded from .env

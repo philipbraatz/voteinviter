@@ -9,7 +9,6 @@ class User(object):
 
 #Person in the server
 class Voter(User):
-    id = ""
     approved = False
     vote_date = None
 
@@ -19,7 +18,7 @@ class Voter(User):
     pass 
 
 #Person who is currently being voted on
-class Elector(User):
+class Elector(Voter):
     votes = [] #array of Voters
     electionsHeld = 0 
 
