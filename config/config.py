@@ -1,5 +1,5 @@
 from os import getcwd, getenv, environ
-from dataclasses.Mode import Modes
+from Mode import Mode
 from os.path import isfile
 import configparser
 import json

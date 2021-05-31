@@ -36,8 +36,8 @@ class Events(Cog):
                     print(f"removed {str(reaction.emoji)} {str(user.name)}")
                     await reaction.remove(user)
                 else:
+                    print(f"TODO add to vote count")
                     
-
 
 def setup(bot):
     bot.add_cog(Events(bot))
