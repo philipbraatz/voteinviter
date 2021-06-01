@@ -1,16 +1,21 @@
+#this is global to
+#get the time it took to load the config WITH VotingBot
+import logging
+from config.config import setupLogging
+import time
+
+logger = logging.getLogger(__name__)
+setupLogging(logger)
+
+logger.info("Loading Bot")
+start = time.time()
+
 from .__init__ import BOTCONFIG
 from discord import Color, Embed, __version__ as discordVersion
 from discord.errors import LoginFailure
 from discord.ext.commands import Bot
 
 from os import listdir, getenv
-from enum import Enum
-import json
-
-import time
-
-import discord
-print(discord.__file__)
 
 class VotingBot(Bot):
     """Just another discord bot"""
@@ -19,10 +24,8 @@ class VotingBot(Bot):
     Cross = "\u274C"
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-        print ("Discord Version:",discordVersion)
-        print ("Loading Bot")
+        logger.debug("Discord Version: "+discordVersion)
 
-        start = time.time()
         try:
             TOKEN = getenv("BOT_TOKEN",None)
             if(TOKEN is None): 
@@ -30,11 +33,11 @@ class VotingBot(Bot):
             self.load_cogs()
 
             end = time.time()
-            print(f"Took {round(end - start,2)} seconds")
+            logger.info(f"Loaded Bot in {round(end - start,2)} seconds")
 
             self.run(TOKEN)
         except LoginFailure as e:
-            print(str(e))
+            logger.warning(str(e))
         pass
 
     def load_cogs(self):
@@ -46,10 +49,8 @@ class VotingBot(Bot):
                 name = cog.replace('.py','')
                 cog = f"bot.modules.{name}"
                 self.load_extension(cog)
-                print(f"bot.loaded {name}")
+                logger.info(f"loaded module {name}")
             except Exception as e:
                 #print(f"{cog} can not be loaded")
-                print(f"Skipping module '{name}': {str(e)}")
+                logger.warning(f"Skipping module '{name}': {str(e)}")
         #print(f"{len(cog.get_commands())} Commands loaded")
-
-bot = VotingBot(command_prefix="!v", description=VotingBot.__doc__)

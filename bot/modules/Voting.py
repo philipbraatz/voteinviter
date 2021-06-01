@@ -53,7 +53,6 @@ class Voting(Cog):
         msg =await channel.fetch_message(self.voteMSG.id)
         await ctx.send(str(msg.reactions))
         await self.on_user_reaction(msg)
-        print("Removed reactions")
         pass
 
     async def on_user_reaction(self,msg):
