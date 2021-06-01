@@ -1,4 +1,4 @@
-from __init__ import WEBSITECONFIG
+from __init__ import WEBSITECONFIG, PRIVATECONFIG
 from flask_login import LoginManager
 #import bot.mainbot as bot
 from flask import Flask
@@ -22,16 +22,5 @@ def create_app():
 
     return app
 
-
-
-def getPort():
-    return WEBSITECONFIG.PORT
-
-
-parent_name = '.'.join(__name__.split('.')[:-1])
-
-
-app = create_app()
-
-#if __name__ == '__main__': Called from main.py instead direct
-app.run(debug=True,port=getPort())
+def run_app(myapp,debug = False):
+    myapp.run(debug=debug,port=WEBSITECONFIG.PORT)

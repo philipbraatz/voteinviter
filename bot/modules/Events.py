@@ -38,6 +38,13 @@ class Events(Cog):
                 else:
                     print(f"TODO add to vote count")
                     
+    @commands.Cog.listener()
+    async def on_message(self,message):
+        print(str(message))
+        if(hasattr(message,'embed') and hasattr(message,'content') and hasattr(message,'webhook_id')):
+            print(str(message.webhook_id))
+        pass
+        
 
 def setup(bot):
     bot.add_cog(Events(bot))
