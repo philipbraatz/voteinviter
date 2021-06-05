@@ -1,14 +1,15 @@
-#this is global to
-#get the time it took to load the config WITH VotingBot
+import time
 import logging
 from config.config import setupLogging
-import time
 
+#this is global to
+#get the time it took to load the config WITH VotingBot
+startOfEverything = time.time()
 logger = logging.getLogger(__name__)
 setupLogging(logger)
 
 logger.info("Loading Bot")
-start = time.time()
+
 
 from .__init__ import BOTCONFIG
 from discord import Color, Embed, __version__ as discordVersion
@@ -22,18 +23,25 @@ class VotingBot(Bot):
     config = BOTCONFIG
     Tick = "\u2705"
     Cross = "\u274C"
+
+    startt = None
+    end = 0
+
+    elector = None
+
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         logger.debug("Discord Version: "+discordVersion)
+
+        self.startt = startOfEverything
+        #logger.debug(f"start time {str(self.startt)}")
 
         try:
             TOKEN = getenv("BOT_TOKEN",None)
             if(TOKEN is None): 
                 raise LoginFailure("No Token in Config")
-            self.load_cogs()
 
-            end = time.time()
-            logger.info(f"Loaded Bot in {round(end - start,2)} seconds")
+            self.load_cogs()
 
             self.run(TOKEN)
         except LoginFailure as e:
