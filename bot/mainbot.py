@@ -1,6 +1,7 @@
 import time
 import logging
 from config.config import setupLogging
+from .__init__ import PRIVATECONFIG
 
 #this is global to
 #get the time it took to load the config WITH VotingBot
@@ -62,3 +63,31 @@ class VotingBot(Bot):
                 #print(f"{cog} can not be loaded")
                 logger.warning(f"Skipping module '{name}': {str(e)}")
         #print(f"{len(cog.get_commands())} Commands loaded")
+
+    def check_user_reaction(self, reaction, user):
+        #is bot message, 
+        #is not the bot,
+        #is not the website,
+        #is a VOTE message
+        return reaction.message.author.id == int(PRIVATECONFIG.CLIENT_ID) and\
+            int(user.id) != int(PRIVATECONFIG.CLIENT_ID) and\
+            int(user.id) != int(PRIVATECONFIG.WEBHOOK_ID) and\
+            len(reaction.message.embeds) > 0 and\
+            "VOTE: " in reaction.message.embeds[0].title
+
+    def check_webhook_reaction(self,webhookMSG,reaction,user):
+        #is webhook
+        #is not the bot
+        #is valid vote
+        return  reaction.message == webhookMSG and \
+                user.id != int(PRIVATECONFIG.CLIENT_ID) and \
+                self.cleanVoteToBool(reaction,user) != None
+
+    async def cleanVoteToBool(self,r,user=None):
+        if(r.emoji == self.Tick):
+            return True
+        elif(r.emoji == self.Cross):
+            return False
+        elif(user != None and not r.me):
+            await r.remove(user)
+        return None

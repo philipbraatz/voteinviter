@@ -46,7 +46,7 @@ class BotConfig():
 
         # SETTINGS Config (Filled with default values)
         self.vote_mode = int(Mode.Difference)# Voting has 2 modes
-        self.vote_ping = "<@123456789>"
+        self.VOTE_PING = "<@123456789>"
         self.min_vote = 3
         # Difference Configs
         self.min_approve = 2
@@ -93,7 +93,6 @@ class BotConfig():
         config_object.add_section("Settings")
 
         config_object.set("Settings","vote_mode",  str(self.vote_mode)) 
-        config_object.set("Settings","vote_ping",  str(self.vote_ping))
         config_object.set("Settings","min_approve", str(self.min_approve))
         config_object.set("Settings","min_percentage", str(self.min_percentage))
         config_object.set("Settings","min_votes",  str(self.min_vote))
@@ -104,6 +103,7 @@ class BotConfig():
         config_object.set("Bot","VOTING_CHANNEL".lower(),  str(self.VOTING_CHANNEL))
         config_object.set("Bot","ADMIN_CHANNEL".lower(),   str(self.ADMIN_CHANNEL))
         config_object.set("Bot","WELCOME_CHANNEL".lower(), str(self.WELCOME_CHANNEL))
+        config_object.set("Bot","VOTE_PING".lower(),  str(self.VOTE_PING))
         config_object.set("Bot","RULES_CHANNEL".lower(),   str(self.RULES_CHANNEL))
         config_object.set("Bot","ROLES_CHANNEL".lower(),   str(self.ROLES_CHANNEL))
 

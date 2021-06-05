@@ -15,7 +15,11 @@ def internalRender(file):
 
 @views.route('/')
 def index():
-    return render_template('landing_page/index.html',username="Scott",voteYes=4,voteNo=3)
+    return render_template('landing_page/index.html',
+    username=session.get("name"),
+    avatar=DiscordAuth.getProfileImage(session.get("id"), session.get("avatar")),
+    voteYes=session.get("positive"),
+    voteNo=session.get("negative"))
 
 @views.route('/signup')
 def discord():
@@ -31,7 +35,8 @@ def login():
 
     return render_template("signup.html",
         username=user.get('username'),
-        avatar=DiscordAuth.getProfileImage(user.get("id"),user.get("avatar")))
+        avatar=DiscordAuth.getProfileImage(user.get("id"),user.get("avatar"))
+        )
 
 @views.route('/request', methods=['POST'])
 def requestvote():
@@ -44,6 +49,23 @@ def requestvote():
         username=user.get('username'),
         avatar=DiscordAuth.getProfileImage(user.get("id"),user.get("avatar")))
     pass
+
+@views.route('api/sendvote', methods=['POST'])
+def sendvote():
+    secret = request.args.get('secret')
+    if (secret == "myBallsAreMassive"):
+        session['positive'] = int(request.args.get('positive'))
+        session['negative'] = int(request.args.get('negative'))
+
+@views.route('api/startvote', methods=['POST'])
+def startvote():
+    secret = request.args.get('secret')
+    if (secret == "myBallsAreSmaller"):
+        session['positive'] = 0
+        session['negative'] = 0
+        session['name'] = request.args.get('name')
+        session['id'] = request.args.get('id')
+        session['avatar'] = request.args.get('avatar')
 
 @views.route('/profile')
 @login_required
