@@ -1,11 +1,2 @@
-{% extends 'base.html' %} 
-{% block title %} Burb Voting {% endblock %}
-{% block links %} 
-    {% include "links.html" %}
-{% endblock %}
-{% block header %}
-    {% include "header/header.html" %}
-{% endblock %}
-{% block body %}
-    {% include "body.html" with context %}
-{% endblock %}
+{% extends 'base.html' %} {% block title %} Burb Voting {% endblock %} {% block links %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='../static/css/vote.css')}}" ?> {% include "links.html" %} {% endblock %} {% block header %} {% include "header/header.html" %} {% endblock %} {% block body %} {% include "body.html" with context %} {% endblock %}
