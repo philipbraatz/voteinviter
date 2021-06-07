@@ -4,8 +4,11 @@ from pathlib import Path
 from .discordAuth import DiscordAuth
 import aiohttp
 import asyncio
+from __init__ import PRIVATECONFIG
 
 views = Blueprint('views',__name__)
+
+myValues = {"name":"","positive": 0,"negative":0,"id":0,"avatar":0}
 
 def internalRender(file):
     reader = open("templates/"+file, "r")
@@ -15,11 +18,12 @@ def internalRender(file):
 
 @views.route('/')
 def index():
+    global myValues
     return render_template('landing_page/index.html',
-    username=session.get("name"),
-    avatar=DiscordAuth.getProfileImage(session.get("id"), session.get("avatar")),
-    voteYes=session.get("positive"),
-    voteNo=session.get("negative"))
+    username=myValues["name"],
+    avatar=DiscordAuth.getProfileImage(myValues["id"], myValues["avatar"]),
+    voteYes=myValues["positive"],
+    voteNo=myValues["negative"])
 
 @views.route('/signup')
 def discord():
@@ -52,20 +56,24 @@ def requestvote():
 
 @views.route('api/sendvote', methods=['POST'])
 def sendvote():
+    global myValues
     secret = request.args.get('secret')
-    if (secret == "myBallsAreMassive"):
-        session['positive'] = int(request.args.get('positive'))
-        session['negative'] = int(request.args.get('negative'))
+    if (secret == PRIVATECONFIG.API_KEY):
+        myValues["positive"] = int(request.args.get('positive'))
+        myValues["negative"] = int(request.args.get('negative'))
+    return "I am text"
 
 @views.route('api/startvote', methods=['POST'])
 def startvote():
+    global myValues
     secret = request.args.get('secret')
-    if (secret == "myBallsAreSmaller"):
-        session['positive'] = 0
-        session['negative'] = 0
-        session['name'] = request.args.get('name')
-        session['id'] = request.args.get('id')
-        session['avatar'] = request.args.get('avatar')
+    if (secret == PRIVATECONFIG.API_KEY):
+        myValues["positive"] = 0
+        myValues["negative"] = 0
+        myValues["name"] = request.args.get('name')
+        myValues["id"] = request.args.get('id')
+        myValues["avatar"] = request.args.get('avatar')
+    return "I am text"
 
 @views.route('/profile')
 @login_required
