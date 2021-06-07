@@ -6,6 +6,7 @@ import json
 import time
 from datetime import date
 from ..dataclasses.User import Elector, Voter
+from ..dataclasses.API import Api
 import asyncio
 
 from logging import getLogger
@@ -56,6 +57,8 @@ class Events(Cog):
                 print("BIRD: "+str(PRIVATECONFIG.CLIENT_ID)+" == "+str(user.id))
                 self.bot.elector.add_vote(await self.bot.cleanVoteToBool(reaction),voter)
                 votes =self.bot.elector.getVotes()
+                Api.postVote(votes['Check'],votes['Cross'])
+
                 print(str(votes))
                 await self.voteMSG.edit(content =f"\n[{votes['Check']}] {self.bot.Tick}  [{votes['Cross']}] {self.bot.Cross}")
             await reaction.remove(user)
@@ -74,6 +77,8 @@ class Events(Cog):
 
                 self.bot.elector.remove_vote(await self.bot.cleanVoteToBool(reaction),voter)
                 votes =self.bot.elector.getVotes()
+                Api.postVote(votes['Check'],votes['Cross'])
+
                 await self.voteMSG.edit(content =f"\n[{votes['Check']}] {self.bot.Tick}  [{votes['Cross']}] {self.bot.Cross}")
                 pass
             #don't care about invalid removals
@@ -138,6 +143,10 @@ class Events(Cog):
             )
         await self.voteMSG.add_reaction(self.bot.Tick)
         await self.voteMSG.add_reaction(self.bot.Cross)
+        Api.startVote(
+            id=self.bot.elector.id,
+            avatar=self.bot.elector.imgUrl,
+            name=self.bot.elector.name)
         pass
     
     def pullDataFromMessage(self,message):

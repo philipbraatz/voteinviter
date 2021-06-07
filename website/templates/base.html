@@ -12,8 +12,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta content="Cleaning Company Website Template" name="keywords">
-    <meta content="Cleaning Company Website Template" name="description">
-    <link href="img/favicon.ico" rel="icon">
+    <meta content="Cleaning Company Website Template" name="description"> {%block icon%}{% endblock%}
 
 
     <title>{% block title %}{% endblock%}</title>
@@ -40,8 +39,6 @@
 
     {% endif %} {% endfor %} {% endif %} {% endwith %}
     <div class="body">{%block body%}{%endblock%}</div>
-
-    <footer>{% block footer %}{% endblock%}</footer>
 </body>
 
 </html>

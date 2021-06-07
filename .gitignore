@@ -130,3 +130,5 @@ dmypy.json
 
 #private data
 appdata/
+.ini
+.vscode/settings.json

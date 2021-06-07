@@ -2,7 +2,12 @@
 import logging
 import asyncio
 import threading
-from config.config import setupLogging
+from __init__ import create_app
+
+try:
+    from .config.config import setupLogging
+except:
+    from config.config import setupLogging
 import sys
 
 threadErrors = []
@@ -64,6 +69,11 @@ def runThreaded():
         for e in threadErrors:
             logger.fatal(str(e[0])+' occurred in thread: '+e[1])
 
+import os
+
+print("My running location is: "+sys.argv[0])
+print("Current Working Directory " , os.getcwd())
+
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
 
@@ -73,8 +83,8 @@ if __name__ == '__main__':
         from bot.mainbot import VotingBot
         bot = VotingBot(command_prefix="!v", description=VotingBot.__doc__)
     elif(sys.argv[1] =="web"):
-        from website.webmain import create_app, run_app
+        from website.webmain import run_app
         app = create_app()
-        run_app(app,True)
+        run_app(app,False)
     else:
         print("argument not recognized")
