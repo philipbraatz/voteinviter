@@ -1,5 +1,6 @@
 from datetime import datetime
 from discord import Embed, Colour
+import json
 
 class User(object):
     id = None
@@ -11,7 +12,7 @@ class User(object):
     pass
 
     def __repr__(self):
-        return "User(\n[ID:{},Name:{},URL:{}])".format(self.id, self.name, self.imgUrl)
+        return "User([ID:{},Name:{},URL:{}])".format(self.id, self.name, self.imgUrl)
 
 
 #Person in the server
@@ -36,6 +37,7 @@ class Elector(Voter):
     #Election info
     description = "I am a cool user" #only needed during election
     relationships = "Nobody loves me" #people they know from the server
+    quickVote = False
 
     def __init__(self, id):
         super().__init__(id)
@@ -43,7 +45,7 @@ class Elector(Voter):
     pass
 
     def __repr__(self):
-        return "Elector(\n{},\n[Desc:{},Votes:{},Elections:{},Relations:{}])".format(super().__repr__(),self.description, len(self.votes),self.electionsHeld, self.relationships)
+        return "Elector({},[Desc:{},Votes:{},Elections:{},Relations:{}])".format(super().__repr__(),self.description, len(self.votes),self.electionsHeld, self.relationships)
 
     def voteEmbeddedMessage(self,bot):
         embedthing = Embed(title=f"VOTE: {self.name} ({self.nickName})",
@@ -51,14 +53,34 @@ class Elector(Voter):
                 \nReact with {bot.Tick} if you want them\nReact with {bot.Cross} if you don't",colour=Colour.blue())
         embedthing.set_thumbnail(url=self.imgUrl)
         return embedthing
+
+    def start_vote(self):
+        with open("config/votes","a") as f:
+            f.write(json.dump(self))
+        pass
     
     def add_vote(self,positiveVote, user):
         self.removeExistingVotes(user.id)
         self.votes.append({"voter":user,"stance":positiveVote})
+
+        fileData = []
+        with open("config/votes", "r") as reader:
+            fileData.append(json.load(reader.readline()))
+        fileData[-1] = json.dump(self)
+        with open("config/votes", "w") as rewrite:
+            rewrite.writelines(fileData)
+        pass
         pass
     
     def remove_vote(self,positiveVote, user):
         self.removeExistingVotes(user.id)
+        fileData = []
+        with open("config/votes", "r") as reader:
+            fileData.append(json.load(reader.readline()))
+        fileData[-1] = json.dump(self)
+        with open("config/votes", "w") as rewrite:
+            rewrite.writelines(fileData)
+        pass
         pass
 
     def getVotes(self):
