@@ -16,14 +16,26 @@ def internalRender(file):
     reader.close()
     return headlinks
 
+@views.route('/index.html')
+@views.route('/index')
 @views.route('/')
 def index():
+    if(request.args.get('vote')):
+        vote = True
+    else:
+        vote = False
+
     global myValues
     return render_template('landing_page/index.html',
     username=myValues["name"],
     avatar=DiscordAuth.getProfileImage(myValues["id"], myValues["avatar"]),
     voteYes=myValues["positive"],
-    voteNo=myValues["negative"])
+    voteNo=myValues["negative"],
+    votePercent=round(myValues["positive"]/(myValues["positive"]+myValues["negative"]+0.000001)*100),
+    vote=True)
+
+
+        
 
 @views.route('/signup')
 def discord():
@@ -32,15 +44,21 @@ def discord():
 @views.route('/discordlogin', methods = ['GET', 'POST'])
 def login(): 
     code = request.args.get('code')
-    access_token = DiscordAuth.get_access_token(code)
-    user = DiscordAuth.get_user_json(access_token)
-    if(not user):
-        return redirect(DiscordAuth.discord_login_url)
+    try:
+        access_token = DiscordAuth.get_access_token(code)
 
-    return render_template("signup.html",
-        username=user.get('username'),
-        avatar=DiscordAuth.getProfileImage(user.get("id"),user.get("avatar"))
-        )
+        user = DiscordAuth.get_user_json(access_token)
+        if(not user):
+            return redirect(DiscordAuth.discord_login_url)
+            
+        session['user'] = user
+
+        return render_template("signup.html",
+            username=user.get('username'),
+            avatar=DiscordAuth.getProfileImage(user.get("id"),user.get("avatar"))
+            )
+    except Exception as e:
+        return e#redirect(DiscordAuth.discord_login_url)
 
 @views.route('/request', methods=['POST'])
 def requestvote():
@@ -49,10 +67,7 @@ def requestvote():
         return redirect(DiscordAuth.discord_login_url)
 
     asyncio.run(DiscordAuth.sendRequest(user,request.form))
-    return render_template("signup.html",
-        username=user.get('username'),
-        avatar=DiscordAuth.getProfileImage(user.get("id"),user.get("avatar")))
-    pass
+    return redirect("/index?vote")
 
 @views.route('api/sendvote', methods=['POST'])
 def sendvote():

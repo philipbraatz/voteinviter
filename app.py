@@ -23,7 +23,7 @@ async def runBotThread():
 
 async def runWebThread():
     try:
-        from website.webmain import create_app, run_app
+        from website.webmain import run_app
         app = create_app()
         run_app(app,True)
     except Exception as e:
@@ -69,11 +69,6 @@ def runThreaded():
         for e in threadErrors:
             logger.fatal(str(e[0])+' occurred in thread: '+e[1])
 
-import os
-
-print("My running location is: "+sys.argv[0])
-print("Current Working Directory " , os.getcwd())
-
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
 
@@ -82,6 +77,7 @@ if __name__ == '__main__':
     elif(sys.argv[1] == "bot"):
         from bot.mainbot import VotingBot
         bot = VotingBot(command_prefix="!v", description=VotingBot.__doc__)
+        print("Bot failed")
     elif(sys.argv[1] =="web"):
         from website.webmain import run_app
         app = create_app()

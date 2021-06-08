@@ -1,13 +1,14 @@
 <body>
+
     <div class="wrapper">
-        <h1>VOTES</h1>
         {%if username != ""%}
+        <h1>VOTES</h1>
         <header>for {{username}}
             <h3>{{voteYes}}&#9989; {{voteNo}}&#10060;</h3>
             {%if voteYes+voteNo == 0%}
             <div class="star-rating" title="0%">
                 {%else%}
-                <div class="star-rating" title="{{(voteYes/(voteYes+voteNo)*100)}}%">
+                <div class="star-rating" title="{{votePercent}}%">
                     {%endif%}
                     <div class="back-stars">
                         <i class="fa fa-star" aria-hidden="true"></i>
@@ -16,7 +17,7 @@
                         <i class="fa fa-star" aria-hidden="true"></i>
                         <i class="fa fa-star" aria-hidden="true"></i>
 
-                        <div class="front-stars" style="width: 50%">
+                        <div class="front-stars" style="width: {{votePercent}}%">
                             <i class="fa fa-star" aria-hidden="true"></i>
                             <i class="fa fa-star" aria-hidden="true"></i>
                             <i class="fa fa-star" aria-hidden="true"></i>

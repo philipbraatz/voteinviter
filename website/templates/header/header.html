@@ -1,6 +1,34 @@
-{%extends 'header/baseHeader.html'%} {%block logo%}
-<img src="../../static/burblevelGroup.png" style="width: 100vw; position:fixed;">{%endblock%} {%block profile%}{%include "header/profilebar.html"%}{%endblock%} {%block nav%}
-<div class="navbar-nav ml-auto">
+{%extends 'header/baseHeader.html'%} {%block logo%}<img src="../../static/burblevelGroup.png" style="width: 100vw; position:fixed;">{%endblock%} {%block profile%}{%include "header/profilebar.html"%}{%endblock%} {%block nav%} {%if value == True%}
+<section style="width: 100vw; float: left; position:fixed;">
+    <div class="alert fade alert-simple alert-success alert-dismissible text-left font__family-montserrat font__size-16 font__weight-light brk-library-rendered rendered show" style="position: fixed;">
+        <button type="button" class="close font__size-18" data-dismiss="alert">
+                          <span aria-hidden="true"><a href="https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwjVtMfrsbLwAhXryzgGHdXMB7I4ChAWMAh6BAgIEAM&url=https%3A%2F%2Fwww.ftcab.com%2F&usg=AOvVaw3v44T5yZdpdgVq0agYf0eg" target="_blank">
+          <i class="fa fa-times greencross"></i>
+          </a></span>
+                          <span class="sr-only">Close</span> 
+                      </button>
+        <i class="start-icon far fa-check-circle faa-tada animated"></i>
+        <strong class="font__weight-semibold">Well done!</strong>{{value}} You have registered to be voted on
+    </div>
+</section>
+{%endif%}
+
+<div class="navbar-nav ml-auto" style="position:fixed;">
     {#%include "header/basenavbar.html"%} {%endwith%#}
+    <a href="/signup" class="btn btn-primary">Sign up with Discord</a>
 </div>
+
+<section>
+    <div class="square_box box_three"></div>
+    <div class="square_box box_four"></div>
+    <div class="container mt-5">
+        <div class="row">
+
+            <div class="col-sm-12">
+            </div>
+
+        </div>
+    </div>
+
+</section>
 {%endblock%}

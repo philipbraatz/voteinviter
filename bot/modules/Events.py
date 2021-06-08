@@ -62,6 +62,9 @@ class Events(Cog):
                 print(str(votes))
                 await self.voteMSG.edit(content =f"\n[{votes['Check']}] {self.bot.Tick}  [{votes['Cross']}] {self.bot.Cross}")
             await reaction.remove(user)
+            if(self.bot.elector.quickVote is True):
+                await asyncio.sleep(60*3)
+                self.checkVoteFinished(self.bot.elector)#TODO ADD finish voting
 
     @commands.Cog.listener()
     async def on_reaction_remove(self,reaction, user):
@@ -93,6 +96,7 @@ class Events(Cog):
     async def on_webhook_message(self):
         await self.webhookMSG.add_reaction(self.bot.Tick)
         await self.webhookMSG.add_reaction(self.bot.Cross)
+        await self.webhookMSG.add_reaction(self.bot.Question)
         
         #logger.debug("Message: "+str(message.content))
         #for em in message.embeds:
@@ -102,7 +106,10 @@ class Events(Cog):
             #logger.debug(f"Message: {reaction.message}\nID:{user.id}\nReaction:{reaction.emoji}")
             return reaction.message == self.webhookMSG and \
                 user.id != int(PRIVATECONFIG.CLIENT_ID) and \
-            ( reaction.emoji == self.bot.Tick or reaction.emoji == self.bot.Cross ) 
+            ( reaction.emoji == self.bot.Tick or 
+                 reaction.emoji == self.bot.Cross or
+                    reaction.emoji == self.bot.Question
+                 ) 
 
         hits = 0
         try:
@@ -123,13 +130,19 @@ class Events(Cog):
 
     async def on_voteBot_reaction(self, isTick, msg, mention):
         if(isTick != None):
-            if(isTick):
+            if(isTick is True):
                 await msg.channel.send(f"User has been approved by {mention}, vote starting...")
                 self.bot.elector= self.pullDataFromMessage(msg)
+                await self.startVote()
+            elif(isTick is 2):
+                await msg.channel.send(f"User has been quick approved by {mention}, quick vote starting...")
+                self.bot.elector= self.pullDataFromMessage(msg)
+                self.bot.elector.quickVote = True
                 await self.startVote()
             else:
                 await msg.channel.send(f"User has been DENIED by {mention}\nIf you want to give a reason do `!vdeny [discord name] [optional reason denied]` ")
                 pass#TODO SAVE as denied
+
         await self.webhookMSG.delete()
         self.webhookMSG = None
         pass
@@ -137,6 +150,7 @@ class Events(Cog):
     
     async def startVote(self):
         channel =await self.bot.fetch_channel(BOTCONFIG.VOTING_CHANNEL)
+        self.bot.elector.start_vote()
         self.voteMSG = await channel.send(
             embed=self.bot.elector.voteEmbeddedMessage(self.bot),
             content=BOTCONFIG.VOTE_PING+f"\n[0] {self.bot.Tick}  [0] {self.bot.Cross}"
@@ -180,6 +194,16 @@ class Events(Cog):
             return s[start:end]
         except ValueError:
             return ""
+
+    def checkVoteFinished(self, elector):
+        votes = elector.getVotes()
+        positive, negative = [votes["Check"], votes["Cross"]]
+        if(elector.quickVote and negative == 0):
+            if(positive > BOTCONFIG.min_quick_vote):
+                return True
+
+        return positive > BOTCONFIG.min_vote and \
+           positive - negative > BOTCONFIG.min_approve
 
 
 def setup(bot):

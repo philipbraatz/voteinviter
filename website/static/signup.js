@@ -49,7 +49,7 @@ $(document).ready(function() {
 
     function nextMaster(type) {
         var focusInput = $('.questions').find('.active');
-        alert("Focus " + focusInput.attr('name') + " : " + focusInput.val())
+        //alert("Focus " + focusInput.attr('name') + " : " + focusInput.val())
         if (focusInput.val() != '') {
             if ((focusInput.attr('name') == 'name' || focusInput.attr('name') == 'username') && focusInput.val().length < 2) {
                 errorMessage(erroEle, "isn't your " + focusInput.attr('name') + " bit small. ", 'visible', 1);

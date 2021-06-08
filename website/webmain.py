@@ -23,4 +23,4 @@ def create_app():
     return app
 
 def run_app(myapp,debug = False):
-    myapp.run(debug=debug,port=WEBSITECONFIG.PORT)
+    myapp.run(debug=debug,port=WEBSITECONFIG.PORT,host=WEBSITECONFIG.IP)

@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block icon%}{%extends "icon.html"%}{%endblock%} {% block links %}
+{% extends "base.html" %} {% block links %}
 <link rel="stylesheet" href="{{url_for('static',filename='css/signup.css')}}"> {% endblock %} {% block title %}Sign Up{% endblock %} {% block body %}
 <div class="container">
     <img src="{{avatar}}">
@@ -24,8 +24,7 @@
                 <input id="relation" name="relation" type="text" placeholder="Bob#1234 keven steve#4820" autofocus/>
             </li>
             <li>
-                <p style="margin-top: 45px;font-size: 32pt;float:right">
-                    <input href="#" type="submit" style="color:white;text-decoration:none" id="signup" value="Request for vote"></p>
+                <input href="#" type="submit" style="color:white;text-decoration:none" id="signup" value="Request for vote">
             </li>
 
 

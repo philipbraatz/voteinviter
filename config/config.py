@@ -10,7 +10,6 @@ class WebsiteConfig:
         self.PORT = 80
         self.IP = "0.0.0.0"
         self.DEBUG = False
-        self.WEBSITE_FOLDER = ""
         self.filepath = "config\\webconfig.ini"
         self.load()
 
@@ -47,6 +46,7 @@ class BotConfig():
         #self.vote_mode = int(Mode.Difference)# Voting has 2 modes
         self.VOTE_PING = "<@123456789>"
         self.min_vote = 3
+        self.min_quick_vote = 1
         # Difference Configs
         self.min_approve = 2
         # Percentage Configs
@@ -95,6 +95,7 @@ class BotConfig():
         config_object.set("Settings","min_approve", str(self.min_approve))
         config_object.set("Settings","min_percentage", str(self.min_percentage))
         config_object.set("Settings","min_votes",  str(self.min_vote))
+        config_object.set("Settings","min_quick_votes",  str(self.min_quick_vote))
 
         # Bot config Section
         config_object.add_section("Bot")
@@ -135,11 +136,15 @@ class PrivateConfig:
 def setupLogging(logger,debug=False):
     if(debug):
         logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
 
     #console logging
     ch = logging.StreamHandler()
     if(debug):
         ch.setLevel(logging.DEBUG)
+    else:
+        ch.setLevel(logging.INFO)
 
     # create formatter
     formatter = logging.Formatter('%(name)s - %(levelname)s: %(message)s')#'%(asctime)s - %(name)s - %(levelname)s - %(message)s'

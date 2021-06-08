@@ -24,6 +24,7 @@ class VotingBot(Bot):
     config = BOTCONFIG
     Tick = "\u2705"
     Cross = "\u274C"
+    Question = "\u2753"
 
     startt = None
     end = 0
@@ -35,7 +36,7 @@ class VotingBot(Bot):
         logger.debug("Discord Version: "+discordVersion)
 
         self.startt = startOfEverything
-        #logger.debug(f"start time {str(self.startt)}")
+        #logger.debug(f"start time {str(self.startt)}")FF
 
         try:
             TOKEN = getenv("BOT_TOKEN",None)
@@ -88,6 +89,13 @@ class VotingBot(Bot):
             return True
         elif(r.emoji == self.Cross):
             return False
+        elif(r.emoji == self.Question):
+            return 2
         elif(user != None and not r.me):
             await r.remove(user)
         return None
+
+    async def addMemberToGuild(self, userId):
+        self.bot.get_channel(BOTCONFIG.WELCOME_CHANNEL).create_invite(
+            max_age=60*60*24, max_uses=1,reason=f"{self.elector.name} \
+            has been voted in ({str(self.elector.getVotes())})")
