@@ -50,13 +50,12 @@ class Elector(Voter):
     def voteEmbeddedMessage(self,bot):
         embedthing = Embed(title=f"VOTE: {self.name} ({self.nickName})",
             description=f"\nDescription: {self.description}\n\
-                \nReact with {bot.Tick} if you want them\nReact with {bot.Cross} if you don't",colour=Colour.blue())
+                \nReact with {bot.YAY} if you want them\nReact with {bot.NAY} if you don't",colour=Colour.blue())
         embedthing.set_thumbnail(url=self.imgUrl)
         return embedthing
 
     def start_vote(self):
-        with open("config/votes","a") as f:
-            f.write(json.dump(self))
+        json.dump(open("config/votes","a"))
         pass
     
     def add_vote(self,positiveVote, user):
@@ -66,10 +65,9 @@ class Elector(Voter):
         fileData = []
         with open("config/votes", "r") as reader:
             fileData.append(json.load(reader.readline()))
-        fileData[-1] = json.dump(self)
+        fileData[-1] = json.dumps(self)
         with open("config/votes", "w") as rewrite:
             rewrite.writelines(fileData)
-        pass
         pass
     
     def remove_vote(self,positiveVote, user):
@@ -77,14 +75,13 @@ class Elector(Voter):
         fileData = []
         with open("config/votes", "r") as reader:
             fileData.append(json.load(reader.readline()))
-        fileData[-1] = json.dump(self)
+        fileData[-1] = json.dumps(self)
         with open("config/votes", "w") as rewrite:
             rewrite.writelines(fileData)
         pass
-        pass
 
     def getVotes(self):
-        #print(str(self.votes))
+        #logger.debug(str(self.votes))
         checks = len([v for v in self.votes if v["stance"]])
         return {"Check":checks, "Cross":len(self.votes)-checks}
 

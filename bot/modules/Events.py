@@ -1,8 +1,8 @@
+from bot.dataclasses.Vote import Vote
 from discord.ext.commands import Cog
 from discord.ext import commands
-from ..__init__ import BOTCONFIG, PRIVATECONFIG
+from ..__init__ import PRIVATECONFIG
 from config.config import setupLogging
-import json
 import time
 from datetime import date
 from ..dataclasses.User import Elector, Voter
@@ -21,12 +21,14 @@ class Events(Cog):
     async def on_member_join(self, member):
         guild = member.guild
         if(guild.id == self.bot.config.MASTER_SERVER):
-            channel = guild.get_channel(self.bot.config.WELCOME_CHANNEL)
-            message = self.bot.config.WELCOME_MESSAGE
-            message = message.replace("(username)",member.mention)
-            message = message.replace("(ruleschannel)",BOTCONFIG.RULES_CHANNEL)
-            message = message.replace("(roleschannel)",BOTCONFIG.ROLES_CHANNEL)
-            await channel.send()
+            await guild.get_channel(self.bot.config.WELCOME_CHANNEL) \
+                .send(self.bot.replaceDynamicText(
+                    self.bot.config.WELCOME_MESSAGE,
+                    member.name,
+                    self.bot.config.RULES_CHANNEL,
+                    self.bot.config.ROLES_CHANNEL)
+                    )
+
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -36,11 +38,10 @@ class Events(Cog):
         #display servers and Master
         guilds = await self.bot.fetch_guilds(limit=None).flatten()
         for guild in guilds:
-            if str(guild.id) == str(self.bot.config.MASTER_SERVER):
-                logger.info(f"Master Server: {guild.id} : {guild.name}")
-            else:
-                logger.info(f"Slave Server: {guild.id} : {guild.name}")
+            isMaster = str(guild.id) == str(self.bot.config.MASTER_SERVER)
+            logger.info(f"{'Master' if isMaster else 'Slave'} Server: {guild.id} : {guild.name}")
     
+
     @commands.Cog.listener()
     async def on_reaction_add(self,reaction, user):
         #logger.debug(reaction.message.content)
@@ -54,17 +55,19 @@ class Events(Cog):
                 voter.approved = True
                 voter.name = user.name
 
-                print("BIRD: "+str(PRIVATECONFIG.CLIENT_ID)+" == "+str(user.id))
-                self.bot.elector.add_vote(await self.bot.cleanVoteToBool(reaction),voter)
+                self.bot.elector.add_vote(reaction.emoji == Vote.YAY,voter)
                 votes =self.bot.elector.getVotes()
-                Api.postVote(votes['Check'],votes['Cross'])
+                Api.postVote(votes['YAY'],votes['NAY'])
 
-                print(str(votes))
-                await self.voteMSG.edit(content =f"\n[{votes['Check']}] {self.bot.Tick}  [{votes['Cross']}] {self.bot.Cross}")
+                await self.voteMSG.edit(content =f"\n[{votes['YAY']}] {self.bot.YAY}  [{votes['NAY']}] {self.bot.NAY}")
+            
             await reaction.remove(user)
+
             if(self.bot.elector.quickVote is True):
                 await asyncio.sleep(60*3)
-                self.checkVoteFinished(self.bot.elector)#TODO ADD finish voting
+                if(self.checkVoteFinished(self.bot.elector)):
+                    await Api.sendInvite(self.bot.elector.id,
+                    self.bot.addMemberToGuild(self.bot.elector.id))
 
     @commands.Cog.listener()
     async def on_reaction_remove(self,reaction, user):
@@ -78,11 +81,11 @@ class Events(Cog):
                 voter.approved = True
                 voter.name = user.name
 
-                self.bot.elector.remove_vote(await self.bot.cleanVoteToBool(reaction),voter)
+                self.bot.elector.remove_vote(reaction.emoji == Vote.YAY,voter)
                 votes =self.bot.elector.getVotes()
                 Api.postVote(votes['Check'],votes['Cross'])
 
-                await self.voteMSG.edit(content =f"\n[{votes['Check']}] {self.bot.Tick}  [{votes['Cross']}] {self.bot.Cross}")
+                await self.voteMSG.edit(content =f"\n[{votes['Check']}] {Vote.YAY}  [{votes['Cross']}] {Vote.Cross}")
                 pass
             #don't care about invalid removals
              
@@ -94,9 +97,9 @@ class Events(Cog):
             await self.on_webhook_message()
 
     async def on_webhook_message(self):
-        await self.webhookMSG.add_reaction(self.bot.Tick)
-        await self.webhookMSG.add_reaction(self.bot.Cross)
-        await self.webhookMSG.add_reaction(self.bot.Question)
+        await self.webhookMSG.add_reaction(Vote.YAY.value)
+        await self.webhookMSG.add_reaction(Vote.NAY.value)
+        await self.webhookMSG.add_reaction(Vote.QUE.value)
         
         #logger.debug("Message: "+str(message.content))
         #for em in message.embeds:
@@ -106,9 +109,9 @@ class Events(Cog):
             #logger.debug(f"Message: {reaction.message}\nID:{user.id}\nReaction:{reaction.emoji}")
             return reaction.message == self.webhookMSG and \
                 user.id != int(PRIVATECONFIG.CLIENT_ID) and \
-            ( reaction.emoji == self.bot.Tick or 
-                 reaction.emoji == self.bot.Cross or
-                    reaction.emoji == self.bot.Question
+            ( reaction.emoji == Vote.YAY.value or 
+                 reaction.emoji == Vote.NAY.value or
+                    reaction.emoji == Vote.QUE.value
                  ) 
 
         hits = 0
@@ -125,38 +128,34 @@ class Events(Cog):
             hits+=1
             if(hits >= 1):
                 hits = 0
-                await self.on_voteBot_reaction(await self.bot.cleanVoteToBool(reaction),reaction.message,user.mention)
+                await self.on_voteBot_reaction(reaction.emoji,reaction.message,user.mention)
         pass
 
-    async def on_voteBot_reaction(self, isTick, msg, mention):
-        if(isTick != None):
-            if(isTick is True):
-                await msg.channel.send(f"User has been approved by {mention}, vote starting...")
-                self.bot.elector= self.pullDataFromMessage(msg)
-                await self.startVote()
-            elif(isTick is 2):
-                await msg.channel.send(f"User has been quick approved by {mention}, quick vote starting...")
-                self.bot.elector= self.pullDataFromMessage(msg)
-                self.bot.elector.quickVote = True
-                await self.startVote()
-            else:
-                await msg.channel.send(f"User has been DENIED by {mention}\nIf you want to give a reason do `!vdeny [discord name] [optional reason denied]` ")
-                pass#TODO SAVE as denied
-
-        await self.webhookMSG.delete()
-        self.webhookMSG = None
+    async def on_voteBot_reaction(self, vote, msg, mention):
+        if(vote == Vote.NAY):
+            await msg.channel.send(f"User has been DENIED by {mention}\nIf you want to give a reason do `!vdeny [discord name] [optional reason denied]` ")
+            await self.webhookMSG.delete()
+            self.webhookMSG = None
+            pass
+        logger.debug(str(vote))
+        quick = " "
+        if(vote == Vote.QUE):
+            quick =" quick "
+        await msg.channel.send(f"User has been{quick}approved by {mention},{quick}vote starting...")
+        self.bot.elector = self.pullDataFromMessage(msg)
+        await self.startVote()
         pass
 
     
     async def startVote(self):
-        channel =await self.bot.fetch_channel(BOTCONFIG.VOTING_CHANNEL)
+        channel =await self.bot.fetch_channel(self.bot.config.VOTING_CHANNEL)
         self.bot.elector.start_vote()
         self.voteMSG = await channel.send(
             embed=self.bot.elector.voteEmbeddedMessage(self.bot),
-            content=BOTCONFIG.VOTE_PING+f"\n[0] {self.bot.Tick}  [0] {self.bot.Cross}"
+            content=self.bot.VOTE_PING+f"\n[0] {Vote.YAY}  [0] {Vote.NAY}"
             )
-        await self.voteMSG.add_reaction(self.bot.Tick)
-        await self.voteMSG.add_reaction(self.bot.Cross)
+        await self.voteMSG.add_reaction(Vote.YAY)
+        await self.voteMSG.add_reaction(Vote.NAY)
         Api.startVote(
             id=self.bot.elector.id,
             avatar=self.bot.elector.imgUrl,
@@ -199,11 +198,11 @@ class Events(Cog):
         votes = elector.getVotes()
         positive, negative = [votes["Check"], votes["Cross"]]
         if(elector.quickVote and negative == 0):
-            if(positive > BOTCONFIG.min_quick_vote):
+            if(positive > self.bot.min_quick_vote):
                 return True
 
-        return positive > BOTCONFIG.min_vote and \
-           positive - negative > BOTCONFIG.min_approve
+        return positive > self.bot.min_vote and \
+           positive - negative > self.bot.min_approve
 
 
 def setup(bot):

@@ -5,6 +5,7 @@ from .discordAuth import DiscordAuth
 import aiohttp
 import asyncio
 from __init__ import PRIVATECONFIG
+from pywebpush import webpush, WebPushException
 
 views = Blueprint('views',__name__)
 
@@ -94,3 +95,20 @@ def startvote():
 @login_required
 def profile():
     return "Members only club "+ current_user.is_authenticated
+
+@views.route('/subscription',methods=['GET', 'POST'])
+def subscription():
+    pass
+
+@views.route('/push', methods=['POST'])
+def push():
+    pass
+
+
+def send_web_push(subscription_information, message_body):
+    return webpush(
+        subscription_info=subscription_information,
+        data=message_body,
+        vapid_private_key=PRIVATECONFIG.VAPID_PRIVATE_KEY,
+        vapid_claims=PRIVATECONFIG.VAPID_CLAIMS
+    )

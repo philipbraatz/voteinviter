@@ -42,7 +42,7 @@ class BotConfig():
     def __init__(self):
         self.filepath = "config\\botconfig.ini"
 
-        # SETTINGS Config (Filled with default values)
+        # SETTINGS Config (FILE WILL OVERWRITE these DEFAULT VALUES)
         #self.vote_mode = int(Mode.Difference)# Voting has 2 modes
         self.VOTE_PING = "<@123456789>"
         self.min_vote = 3
@@ -51,6 +51,9 @@ class BotConfig():
         self.min_approve = 2
         # Percentage Configs
         self.min_percentage = 0.6
+        #invite
+        self.invite_expire_time =24
+
 
         # BOT Config
         self.MASTER_SERVER   = 0
@@ -61,11 +64,13 @@ class BotConfig():
         self.WELCOME_CHANNEL = 0
         self.WELCOME_MESSAGE = ""
         self.CURRENT_ELECT   = ""
+        self.STAFF_ROLE      = 0
 
         self.load()
         pass
 
     def load(self):
+
         config_object = configparser.ConfigParser()
         #read config file into object
         config_object.read(self.filepath)
@@ -96,6 +101,7 @@ class BotConfig():
         config_object.set("Settings","min_percentage", str(self.min_percentage))
         config_object.set("Settings","min_votes",  str(self.min_vote))
         config_object.set("Settings","min_quick_votes",  str(self.min_quick_vote))
+        config_object.set("Settings", "invite_expire_time", str(self.invite_expire_time))
 
         # Bot config Section
         config_object.add_section("Bot")
@@ -106,6 +112,8 @@ class BotConfig():
         config_object.set("Bot","VOTE_PING".lower(),  str(self.VOTE_PING))
         config_object.set("Bot","RULES_CHANNEL".lower(),   str(self.RULES_CHANNEL))
         config_object.set("Bot","ROLES_CHANNEL".lower(),   str(self.ROLES_CHANNEL))
+        config_object.set("Bot","STAFF_ROLE".lower(),   str(self.STAFF_ROLE))
+
 
         config_object.add_section("OAuth")
         config_object.set("OAuth","CLIENT_ID".lower(),str(self.CLIENT_ID))
@@ -122,6 +130,9 @@ class PrivateConfig:
     CLIENT_ID          = None
 
     def __init__(self):
+        self.VAPID_PRIVATE_KEY = open(
+                    "config/private_key.txt", "r+").readline().strip("\n")
+        self.VAPID_PUBLIC_KEY = open("config/public_key.txt", "r+").read().strip("\n")
         self.load()
 
     def load(self):

@@ -4,6 +4,7 @@ from discord.ext import commands
 
 from ..__init__ import PRIVATECONFIG, BOTCONFIG
 from bot.dataclasses.User import Voter, Elector
+from bot.dataclasses.Vote import Vote
 
 class Voting(Cog):
     def __init__(self,bot):
@@ -19,14 +20,14 @@ class Voting(Cog):
 
         emb = Embed(title="VOTE: "+name,
             description=f"{self.bot.config.vote_ping}\nDescription: {description}\n\
-                \nReact with {self.bot.Tick} if you want them\nReact with {self.bot.Cross} if you don't",colour=Colour.blue())
+                \nReact with {Vote.YAY} if you want them\nReact with {Vote.NAY} if you don't",colour=Colour.blue())
         self.voteMSG = await ctx.send(embed=emb)
-        await self.voteMSG.add_reaction(self.bot.Tick)
-        await self.voteMSG.add_reaction(self.bot.Cross)
+        await self.voteMSG.add_reaction(Vote.YAY.value)
+        await self.voteMSG.add_reaction(Vote.NAY.value)
         self.elector = Elector("TEMP_NEEDS_REAL")
 
         def check(reaction, user):
-            return reaction.message == self.voteMSG and ( reaction.emoji == self.bot.Tick or reaction.emoji == self.bot.Cross )
+            return reaction.message == self.voteMSG and ( reaction.emoji == Vote.YAY or reaction.emoji == Vote.NAY )
 
 
         # TODO add voting logic, loop until vote ends
@@ -42,7 +43,7 @@ class Voting(Cog):
 
     @commands.command(name="stop")
     async def stop(self,ctx):
-        print("Stop")
+        logger.info("TODO fill out")
         pass
 
     @commands.command(name="remove")
@@ -54,15 +55,15 @@ class Voting(Cog):
         pass
 
     async def on_user_reaction(self,msg):
-        #print("All Reactions: "+str( msg.reactions))
+        #logger.debug("All Reactions: "+str( msg.reactions))
         userReactions = [reaction for reaction in msg.reactions if not reaction.me]#filter(reaction => reaction.users.cache.has(PRIVATECONFIG.OAUTH_CLIENT_TOKEN));
         try:
-            #print("User Reactions: "+str(userReactions))
+            #logger.debug("User Reactions: "+str(userReactions))
             for reaction in userReactions:
                 for user in await reaction.users().flatten():
                     await msg.remove_reaction(reaction.emoji, user)
         except Exception as e:
-            print(str(e))
+            logger.fatal(str(e))
 
 
 

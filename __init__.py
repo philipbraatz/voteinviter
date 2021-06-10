@@ -7,6 +7,6 @@ WEBSITECONFIG = WebsiteConfig()
 PRIVATECONFIG = PrivateConfig()
 
 try:
-    from .website.webmain import create_app
+    from .website.webmain import WebMain
 except:
-    from website.webmain import create_app
+    from website.webmain import WebMain

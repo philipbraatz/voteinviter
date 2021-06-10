@@ -2,7 +2,7 @@
 import logging
 import asyncio
 import threading
-from __init__ import create_app
+from __init__ import WebMain
 
 try:
     from .config.config import setupLogging
@@ -23,9 +23,9 @@ async def runBotThread():
 
 async def runWebThread():
     try:
-        from website.webmain import run_app
-        app = create_app()
-        run_app(app,True)
+        webApp = WebApp()
+        app = webApp.create_app()
+        webApp.run_app(True)
     except Exception as e:
         threadErrors.append([e,"Website"])
     pass
@@ -70,6 +70,8 @@ def runThreaded():
             logger.fatal(str(e[0])+' occurred in thread: '+e[1])
 
 if __name__ == '__main__':
+    mainLogger = logging.getLogger(__name__)
+    setupLogging(mainLogger)
     loop = asyncio.get_event_loop()
 
     if(len(sys.argv) == 1):
@@ -77,10 +79,10 @@ if __name__ == '__main__':
     elif(sys.argv[1] == "bot"):
         from bot.mainbot import VotingBot
         bot = VotingBot(command_prefix="!v", description=VotingBot.__doc__)
-        print("Bot failed")
+        mainLogger.info("Bot has turned off")
     elif(sys.argv[1] =="web"):
-        from website.webmain import run_app
-        app = create_app()
-        run_app(app,False)
+        webSite = WebMain()
+        webSite.create_app()
+        webSite.run_app(False)
     else:
-        print("argument not recognized")
+        mainLogger.warn("argument not recognized, Expected either 'web' or 'bot'")
