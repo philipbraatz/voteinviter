@@ -83,6 +83,6 @@ if __name__ == '__main__':
     elif(sys.argv[1] =="web"):
         webSite = WebMain()
         webSite.create_app()
-        webSite.run_app(False)
+        webSite.run_app(True)
     else:
         mainLogger.warn("argument not recognized, Expected either 'web' or 'bot'")

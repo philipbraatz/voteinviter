@@ -17,7 +17,7 @@ class WebsiteConfig:
         config_object = configparser.ConfigParser()
         #read config file into object
         config_object.read(self.filepath)
-        #print(str(config_object.sections()))
+        #logger.debug(str(config_object.sections()))
         if(len(config_object.sections())<=0):
              logger.fatal("No content found in website config: {self.filepath}")
 

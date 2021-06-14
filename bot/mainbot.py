@@ -45,7 +45,7 @@ class VotingBot(Bot):
             if(TOKEN is None): 
                 raise LoginFailure("No Token in Config")
 
-            self.remove_command("help")
+            #self.remove_command("help")
             self.load_cogs()
 
             self.run(TOKEN)
@@ -89,9 +89,12 @@ class VotingBot(Bot):
                 Vote.isVote(reaction.emoji)
 
     async def addMemberToGuild(self, userId):
-        self.bot.get_channel(self.config.WELCOME_CHANNEL).create_invite(
-            max_age=self.config.invite_expire_time, max_uses=1,reason=f"{self.elector.name} \
-            has been voted in ({str(self.elector.getVotes())})")
+        return await self.bot.get_channel( 
+            await self.config.WELCOME_CHANNEL)\
+            .create_invite(
+                max_age=self.config.invite_expire_time,
+                max_uses=1,
+                reason=f"{self.elector.name}has been voted in ({str(self.elector.getVotes())})")
     
 
     def replaceDynamicText(self,message,name,rule,role):

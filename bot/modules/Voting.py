@@ -6,6 +6,11 @@ from ..__init__ import PRIVATECONFIG, BOTCONFIG
 from bot.dataclasses.User import Voter, Elector
 from bot.dataclasses.Vote import Vote
 
+from logging import getLogger
+from config.config import setupLogging
+logger = getLogger(__name__)
+setupLogging(logger)
+
 class Voting(Cog):
     def __init__(self,bot):
         self.bot = bot
@@ -13,6 +18,7 @@ class Voting(Cog):
         self.elector = None
 
     @commands.command(name="start")
+    @commands.has_role(int(BOTCONFIG.STAFF_ROLE))
     async def start(self, ctx, name =None, *, description=None):
         if name is None:
             await ctx.send("voting requires a username")
@@ -20,17 +26,17 @@ class Voting(Cog):
 
         emb = Embed(title="VOTE: "+name,
             description=f"{self.bot.config.vote_ping}\nDescription: {description}\n\
-                \nReact with {Vote.YAY} if you want them\nReact with {Vote.NAY} if you don't",colour=Colour.blue())
+                \nReact with {Vote.YAY.value} if you want them\nReact with {Vote.NAY.value} if you don't",colour=Colour.blue())
         self.voteMSG = await ctx.send(embed=emb)
         await self.voteMSG.add_reaction(Vote.YAY.value)
         await self.voteMSG.add_reaction(Vote.NAY.value)
         self.elector = Elector("TEMP_NEEDS_REAL")
 
         def check(reaction, user):
-            return reaction.message == self.voteMSG and ( reaction.emoji == Vote.YAY or reaction.emoji == Vote.NAY )
+            return reaction.message == self.voteMSG and ( reaction.emoji == Vote.YAY.value or reaction.emoji == Vote.NAY.value )
 
 
-        # TODO add voting logic, loop until vote ends
+        # TODO add voting logic, loop until vote end
         try:
             reaction, user = await self.bot.wait_for("reaction_add",timeout=60.0,check=check)
         except:
@@ -42,11 +48,13 @@ class Voting(Cog):
         pass
 
     @commands.command(name="stop")
+    @commands.has_role(int(BOTCONFIG.STAFF_ROLE))
     async def stop(self,ctx):
         logger.info("TODO fill out")
         pass
 
     @commands.command(name="remove")
+    @commands.has_role(int(BOTCONFIG.STAFF_ROLE))
     async def remove(self,ctx):
         channel = self.bot.get_channel(BOTCONFIG.VOTING_CHANNEL)
         msg =await channel.fetch_message(self.voteMSG.id)

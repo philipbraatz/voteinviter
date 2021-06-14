@@ -55,11 +55,11 @@ class Events(Cog):
                 voter.approved = True
                 voter.name = user.name
 
-                self.bot.elector.add_vote(reaction.emoji == Vote.YAY,voter)
+                self.bot.elector.add_vote(reaction.emoji == Vote.YAY.value,voter)
                 votes =self.bot.elector.getVotes()
                 Api.postVote(votes['YAY'],votes['NAY'])
 
-                await self.voteMSG.edit(content =f"\n[{votes['YAY']}] {self.bot.YAY}  [{votes['NAY']}] {self.bot.NAY}")
+                await self.voteMSG.edit(content =f"\n[{votes['YAY']}] {Vote.YAY.value}  [{votes['NAY']}] {Vote.NAY.value}")
             
             await reaction.remove(user)
 
@@ -81,11 +81,11 @@ class Events(Cog):
                 voter.approved = True
                 voter.name = user.name
 
-                self.bot.elector.remove_vote(reaction.emoji == Vote.YAY,voter)
+                self.bot.elector.remove_vote(reaction.emoji == Vote.YAY.value,voter)
                 votes =self.bot.elector.getVotes()
                 Api.postVote(votes['Check'],votes['Cross'])
 
-                await self.voteMSG.edit(content =f"\n[{votes['Check']}] {Vote.YAY}  [{votes['Cross']}] {Vote.Cross}")
+                await self.voteMSG.edit(content =f"\n[{votes['Check']}] {Vote.YAY.value}  [{votes['Cross']}] {Vote.NAY.value}")
                 pass
             #don't care about invalid removals
              
@@ -152,10 +152,10 @@ class Events(Cog):
         self.bot.elector.start_vote()
         self.voteMSG = await channel.send(
             embed=self.bot.elector.voteEmbeddedMessage(self.bot),
-            content=self.bot.VOTE_PING+f"\n[0] {Vote.YAY}  [0] {Vote.NAY}"
+            content=self.bot.config.VOTE_PING+f"\n[0] {Vote.YAY.value}  [0] {Vote.NAY.value}"
             )
-        await self.voteMSG.add_reaction(Vote.YAY)
-        await self.voteMSG.add_reaction(Vote.NAY)
+        await self.voteMSG.add_reaction(Vote.YAY.value)
+        await self.voteMSG.add_reaction(Vote.NAY.value)
         Api.startVote(
             id=self.bot.elector.id,
             avatar=self.bot.elector.imgUrl,
@@ -177,7 +177,7 @@ class Events(Cog):
         
         elector = Elector(id)
         elector.imgUrl = url
-        elector.vote_date = date.today()
+        elector.vote_date = str(date.today())
         elector.name = username
         elector.nickName = nickName
         elector.description = message.content

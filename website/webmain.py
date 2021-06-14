@@ -4,6 +4,13 @@ from flask import Flask
 from flask_pywebpush import WebPush, WebPushException
 from os import getenv
 
+import logging
+from config.config import setupLogging
+logger = logging.getLogger(__name__)
+setupLogging(logger, True)
+
+logger.info("Loading Website")
+
 class WebMain:
     app = None
 
@@ -48,3 +55,4 @@ class WebMain:
 
     def run_app(self,debug = False):
         self.app.run(debug=debug,port=self.config.PORT,host=self.config.IP)
+        logger.info("Website Offline")

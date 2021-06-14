@@ -27,11 +27,13 @@ def index():
         vote = False
 
     global myValues
-    return render_template('landing_page/index.html',
+
+    print("Name: "+myValues["name"])
+    return render_template('v2/index.html',
     username=myValues["name"],
     avatar=DiscordAuth.getProfileImage(myValues["id"], myValues["avatar"]),
-    voteYes=myValues["positive"],
-    voteNo=myValues["negative"],
+    yay=myValues["positive"],
+    nay=myValues["negative"],
     votePercent=round(myValues["positive"]/(myValues["positive"]+myValues["negative"]+0.000001)*100),
     vote=True)
 
