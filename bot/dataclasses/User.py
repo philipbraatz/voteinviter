@@ -18,7 +18,7 @@ class User(object):
     pass
 
     def __repr__(self):
-        return "User([ID:{},Name:{},URL:{}])".format(self.id, self.name, self.imgUrl)
+        return "User([ID:{},Name:{},URL:{}])".format(str(self.id), self.name, self.imgUrl)
 
 
 #Person in the server
@@ -35,8 +35,9 @@ class Voter(User):
     db =sl.connect('burbVote.db')
     db.row_factory = sl.Row
 
-    def __init__(self, id):              
-        super().__init__(id)  
+    def __init__(self, id):  
+        if(id < 0): return
+        super().__init__(id)
         
         self.approved = False
         self.vote_date = None
@@ -59,29 +60,27 @@ class Voter(User):
             );""")
         
         self.id = id
-        Vote.construct(con.execute("""Select id, isApproved, nickName, imgUrl, name FROM elector
-                    WHERE id = ?""",(self.id,)).fetchone())
+        self.construct(con.execute("""Select id, isApproved, nickName, imgUrl, name FROM elector
+                    WHERE id = ?""",(str(self.id),)).fetchone())
         
 
     def __repr__(self):
         return "Voter([Name:{},Aprvd:{},Date:{}])".format(self.name, self.approved, self.vote_date)
 
-    def constructVote(vote):
-        self = Voter()
-        self.id = vote["voterid"]
+    def constructVote(self,vote):
+        self.id = int(vote["voterid"])
         self.voteFor = vote["elector"]
         self.yay =vote["yay"] == 1
         return self
     
-    def construct(elector):
-        self = Voter()
-        if(elector is not None):
+    def construct(self,elector):
+        if(elector == None):
             return self._exists
         self._exists = True
         
-        self.id = elector["id"]
+        #print(str(elector))
+        self.id = int(elector["id"])
         self.approved = elector["isApproved"]
-        self.vote_date = elector["vote_date"]
         self.name = elector["name"]
         self.imgUrl = elector["imgUrl"]
         self.nickName = elector["nickName"]
@@ -96,7 +95,7 @@ class Elector(Voter):
     db.row_factory = sl.Row
 
     def __init__(self, id):
-        
+        super().__init__(id)
         self.votes = [] #array of Voters
         self.electionsHeld = 0 
 
@@ -120,16 +119,26 @@ class Elector(Voter):
             );""")
 
         self.id = id
-        if(self.construct(con.execute("""SELECT * FROM elector WHERE id = ?""",(self.id,)).fetchone()) is not None):
+        
+        result =con.execute("""SELECT * FROM elector WHERE id = ?""",(str(self.id),)).fetchone()
+        if(self.construct(result) is not None):
+            con = Elector.db.cursor()
+            con.execute("""CREATE TABLE IF NOT EXISTS vote (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                voterid INTEGER NOT NULL,
+                elector INTEGER NOT NULL,
+                yay INTEGER
+            );""")
+            
             for vote in con.execute("""SELECT * FROM vote
-                        WHERE elector = ?""",self.id):
-                self.votes.append(Vote.constructVote(vote))
+                        WHERE elector = ?""",(str(self.id),)):
+                self.votes.append(self.constructVote(vote))
                 pass
         pass
     pass
 
     def construct(self, elector):
-        if(elector is not None):
+        if(elector is None):
             return self._exists
         self._exists = True
         
@@ -148,13 +157,22 @@ class Elector(Voter):
         con = Elector.db.cursor()
         con.execute("""INSERT INTO elector(
             id,isApproved,electionsHeld,vote_date,[name],imgUrl,nickName,[description],relationships,quick)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
-            (self.id,self.approved,self.electionsHeld,self.vote_date,self.name,self.imgUrl,self.nickName,self.description,self.relationships,self.quickVote))
+            VALUES(?,?,?,?,?,?,?,?,?,?)""",
+            (str(self.id),self.approved,self.electionsHeld,self.vote_date,self.name,self.imgUrl,self.nickName,self.description,self.relationships,self.quickVote))
 
     def voteEmbeddedMessage(self,bot):
         embedthing = Embed(title=f"VOTE: {self.name} ({self.nickName})",
             description=f"\nDescription: {self.description}\n\
                 \nReact with {Vote.YAY.value} if you want them\nReact with {Vote.NAY.value} if you don't",colour=Colour.blue())
+        embedthing.set_thumbnail(url=self.imgUrl)
+        return embedthing
+    
+    def voteFinishMessage(self,bot):
+        endVotes =self.get_vote_count()
+        message = "Please welcome our new member!" if self.approved else "They did not pass the vote :("
+        embedthing = Embed(title=f"Voting has ended for {self.name} ({self.nickName})",
+        description=f"\Result: {Vote.YAY.value}{endVotes['yay']} | {Vote.NAY.value}{endVotes['nay']}\n\
+            \n{message}",colour=Colour.blue())
         embedthing.set_thumbnail(url=self.imgUrl)
         return embedthing
 
@@ -168,13 +186,14 @@ class Elector(Voter):
             );""")
         
         con.execute("""DELETE FROM vote
-                    WHERE elector = ?""",(self.id,))
+                    WHERE elector = ?""",(str(self.id),))
         pass
     
     def add_vote(self,positiveVote, user):
+        self.remove_vote(positiveVote,user)
         con = Elector.db.cursor()
-        con.execute("""INSERT INTO vote (id, voterid, elector, yay) values(?, ?, ?);""",
-                    (self.id, user.id, positiveVote))
+        con.execute("""INSERT INTO vote ( voterid, elector, yay) values(?, ?, ?);""",
+                    (str(user.id),str(self.id), positiveVote))
     
     def remove_vote(self,positiveVote, user):
         con = Elector.db.cursor()
@@ -185,7 +204,7 @@ class Elector(Voter):
         con = Elector.db.cursor()
         data = con.execute("""SELECT yay ,COUNT(*) as [count] FROM vote
                     GROUP BY yay
-                    ORDER BY yay;""")
+                    ORDER BY yay;""").fetchall()
 
         voteCount ={}
         
