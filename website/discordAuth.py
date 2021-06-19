@@ -16,7 +16,7 @@ class DiscordAuth(object):
     webhook_id = int(getenv("WEBHOOK_ID",""))
     webhook_secret = getenv("WEBSITE_SECRET_KEY","")
     scope = "identify%20guilds.join"
-    redirect_uri = "http://65.31.250.51/discordlogin"#TODO - check if development 
+    redirect_uri = "http://burbscanvote.tk/discordlogin"#TODO - check if development 
     discord_login_url = DISCORD_API+"oauth2/authorize?client_id={}&redirect_uri={}&response_type=code&scope={}".format(client_id,redirect_uri,scope)
     discord_token_url = DISCORD_API+"oauth2/token"
     discord_webhook_url = DISCORD_API+"webhooks/{}/{}".format(webhook_id,webhook_secret)

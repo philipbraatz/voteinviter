@@ -3,3 +3,4 @@ flask_login
 python-dotenv
 requests
 discord
+flask_pywebpush

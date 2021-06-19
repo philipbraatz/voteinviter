@@ -2,13 +2,13 @@ from bot.dataclasses.Vote import Vote
 from discord.ext.commands import Cog
 from discord.ext import commands
 from ..__init__ import PRIVATECONFIG
-from config.config import setupLogging
 import time
 from datetime import date
 from ..dataclasses.User import Elector, Voter
 from ..dataclasses.API import Api
 import asyncio
 
+from config.config import setupLogging
 from logging import getLogger
 logger = getLogger(__name__)
 setupLogging(logger)
@@ -33,7 +33,7 @@ class Events(Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.end = time.time()
-        logger.info(f"VoteInviter Started in {round(self.bot.end-self.bot.startt,2)} seconds")
+        logger.info(f"VoteInviter Started in {round(self.bot.end - self.bot.startt, 2)} seconds")
         
         #display servers and Master
         guilds = await self.bot.fetch_guilds(limit=None).flatten()
@@ -52,19 +52,22 @@ class Events(Cog):
 
                 #TODO load data
                 voter = Voter(user.id)
+                
                 voter.approved = True
+                voter.nickName = user.nick
                 voter.name = user.name
+                voter.voteFor = self.bot.elector.id
 
                 self.bot.elector.add_vote(reaction.emoji == Vote.YAY.value,voter)
-                votes =self.bot.elector.getVotes()
-                Api.postVote(votes['YAY'],votes['NAY'])
+                votes =self.bot.elector.get_vote_count()
+                Api.postVote(votes['yay'],votes['nay'])
 
-                await self.voteMSG.edit(content =f"\n[{votes['YAY']}] {Vote.YAY.value}  [{votes['NAY']}] {Vote.NAY.value}")
+                await self.voteMSG.edit(content =f"\n[{votes['yay']}] {Vote.YAY.value}  [{votes['nay']}] {Vote.NAY.value}")
             
             await reaction.remove(user)
 
             if(self.bot.elector.quickVote is True):
-                await asyncio.sleep(60*3)
+                await asyncio.sleep(60*3)#secret 3 minute wait for quick voters
                 if(self.checkVoteFinished(self.bot.elector)):
                     await Api.sendInvite(self.bot.elector.id,
                     self.bot.addMemberToGuild(self.bot.elector.id))
@@ -80,12 +83,14 @@ class Events(Cog):
                 voter = Voter(user.id)
                 voter.approved = True
                 voter.name = user.name
+                voter.nickName = user.nick
+                voter.voteFor = self.bot.elector.id
 
                 self.bot.elector.remove_vote(reaction.emoji == Vote.YAY.value,voter)
-                votes =self.bot.elector.getVotes()
-                Api.postVote(votes['Check'],votes['Cross'])
+                votes =self.bot.elector.get_vote_count()
+                Api.postVote(votes['yay'],votes['nay'])
 
-                await self.voteMSG.edit(content =f"\n[{votes['Check']}] {Vote.YAY.value}  [{votes['Cross']}] {Vote.NAY.value}")
+                await self.voteMSG.edit(content =f"\n[{votes['yay']}] {Vote.YAY.value}  [{votes['nay']}] {Vote.NAY.value}")
                 pass
             #don't care about invalid removals
              

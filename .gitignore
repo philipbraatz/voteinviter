@@ -132,3 +132,4 @@ dmypy.json
 appdata/
 .ini
 .vscode/settings.json
+.zip
