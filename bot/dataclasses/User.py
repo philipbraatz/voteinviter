@@ -45,7 +45,7 @@ class Voter(User):
         self.yay = None
         self.voteFor = None
         
-        con = Elector.db.cursor()
+        con = Voter.db.cursor()
         con.execute("""CREATE TABLE IF NOT EXISTS elector (
                 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 isApproved INTEGER NOT NULL,
@@ -103,6 +103,7 @@ class Elector(Voter):
         self.description = "I am a cool user" #only needed during election
         self.relationships = "Nobody loves me" #people they know from the server
         self.quickVote = False
+        self.messageid = 0
 
         con = Elector.db.cursor()
         con.execute("""CREATE TABLE IF NOT EXISTS elector (
@@ -115,7 +116,8 @@ class Elector(Voter):
                 nickName TEXT,
                 [description] TEXT,
                 relationships TEXT,
-                quick INTEGER
+                quick INTEGER,
+                messageId INTEGER
             );""")
 
         self.id = id
@@ -155,23 +157,42 @@ class Elector(Voter):
 
     def save(self):
         con = Elector.db.cursor()
-        con.execute("""INSERT INTO elector(
-            id,isApproved,electionsHeld,vote_date,[name],imgUrl,nickName,[description],relationships,quick)
-            VALUES(?,?,?,?,?,?,?,?,?,?)""",
-            (str(self.id),self.approved,self.electionsHeld,self.vote_date,self.name,self.imgUrl,self.nickName,self.description,self.relationships,self.quickVote))
+    
+        existing =con.execute("""SELECT id,isApproved,electionsHeld,vote_date,[name],imgUrl,nickName,[description],relationships,quick, messageId
+                        FROM elector
+                        WHERE id = ?;""",(self.id,)).fetchone()
+        if(existing is None):
+            con.execute("""INSERT INTO elector(
+                id,isApproved,electionsHeld,vote_date,[name],imgUrl,nickName,[description],relationships,quick, messageId)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                (str(self.id),self.approved,self.electionsHeld,self.vote_date,self.name,self.imgUrl,self.nickName,self.description,self.relationships,self.quickVote,self.messageid))
+        else:
+            con.execute("""UPDATE elector SET
+                        isApproved=?,electionsHeld=?,vote_date=?,[name]=?,imgUrl=?,nickName=?,[description]=?,relationships=?,quick=?,messageId=?
+                        WHERE id = ?
+                        """,(self.approved,existing["electionsHeld"]+1,self.vote_date,self.name,self.imgUrl,self.nickName,self.description,self.relationships,self.quickVote,str(self.id),self.messageid))
 
     def voteEmbeddedMessage(self,bot):
         embedthing = Embed(title=f"VOTE: {self.name} ({self.nickName})",
             description=f"\nDescription: {self.description}\n\
                 \nReact with {Vote.YAY.value} if you want them\nReact with {Vote.NAY.value} if you don't",colour=Colour.blue())
-        embedthing.set_thumbnail(url=self.imgUrl)
+        embedthing.set_thumbnail(url="https://cdn.discordapp.com/avatars/"+self.id+"/"+self.imgUrl+".png?size=128")
         return embedthing
     
-    def voteFinishMessage(self,bot):
+    async def voteFinishMessage(self,bot,channel):
+        if(self.approved):
+            invite = await channel.create_invite(
+                max_age= bot.config.invite_expire_time,
+                max_usages=1,
+                unique=False,
+                reason=f"{bot.elector.name} has passed the vote"
+                )
+            print(str(invite))
+
         endVotes =self.get_vote_count()
-        message = "Please welcome our new member!" if self.approved else "They did not pass the vote :("
+        message = f"Please welcome our new member! [your invite link!](<{invite}>)" if self.approved else "They did not pass the vote :("
         embedthing = Embed(title=f"Voting has ended for {self.name} ({self.nickName})",
-        description=f"\Result: {Vote.YAY.value}{endVotes['yay']} | {Vote.NAY.value}{endVotes['nay']}\n\
+        description=f"Result: {Vote.YAY.value}[**{endVotes['yay']}**] | {Vote.NAY.value}[**{endVotes['nay']}**]\n\
             \n{message}",colour=Colour.blue())
         embedthing.set_thumbnail(url=self.imgUrl)
         return embedthing
@@ -203,10 +224,11 @@ class Elector(Voter):
     def get_vote_count(self):
         con = Elector.db.cursor()
         data = con.execute("""SELECT yay ,COUNT(*) as [count] FROM vote
+                    WHERE elector = ?
                     GROUP BY yay
-                    ORDER BY yay;""").fetchall()
+                    ORDER BY yay;""",(self.id,)).fetchall()
 
-        voteCount ={}
+        voteCount ={"yay":0,"nay":0}
         
         
         lend =len(data)
@@ -219,3 +241,10 @@ class Elector(Voter):
                 voteCount = {"yay":0,"nay":data[0]["count"]}
             
         return voteCount
+    
+    @staticmethod
+    def get_active_vote():
+        con = Elector.db.cursor()
+        existing =con.execute("""SELECT id FROM elector
+            WHERE vote_date >datetime('now','-1 day');""").fetchone()
+        return existing

@@ -3,7 +3,7 @@ from ..__init__ import PRIVATECONFIG
 
 class Api(object):
     URL = "http://65.31.250.51/api/"#"http://127.0.0.1:84/api/"
-    secret = "secret={PRIVATECONFIG.API_KEY}"
+    secret = f"secret={PRIVATECONFIG.API_KEY}"
 
     @staticmethod
     def postVote(positive, negative):
@@ -13,6 +13,11 @@ class Api(object):
     @staticmethod
     def startVote( id, avatar, name):
         builder = f"{Api.URL}startvote?{Api.secret}&id={id}&avatar={avatar}&name={name}"
+        return requests.post(builder)
+    
+    @staticmethod
+    def endVote( id, avatar, name):
+        builder = f"{Api.URL}endVote?{Api.secret}&id={id}&avatar={avatar}&name={name}"
         return requests.post(builder)
     
     @staticmethod
