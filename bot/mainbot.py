@@ -89,12 +89,13 @@ class VotingBot(Bot):
                 Vote.isVote(reaction.emoji)
 
     async def addMemberToGuild(self, userId):
-        return await self.bot.get_channel( 
+        self.elector.inviteLink = await self.bot.get_channel( 
             await self.config.WELCOME_CHANNEL)\
             .create_invite(
                 max_age=self.config.invite_expire_time,
                 max_uses=1,
-                reason=f"{self.elector.name}has been voted in ({str(self.elector.getVotes())})")
+                reason=f"{self.elector.name} has been voted in ({str(self.elector.getVotes())})")
+        return self.elector.inviteLink
     
 
     def replaceDynamicText(self,message,name,rule,role):

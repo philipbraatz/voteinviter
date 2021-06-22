@@ -8,7 +8,7 @@ class Help(Cog):
     #Config commands ----------------------------
     @commands.command(name="invite", invoke_without_command=True,
         description="How to invite someone",
-        help="This bot is allows outsiders to request to join the server.\n\
+        help="This bot allows outsiders to request to join the server.\n\
             This is done by going to http://burbscanvote.tk/signup and filling out all the information.\n\
             If staff approve it, the vote will begin.")
     async def invite(self,ctx):

@@ -6,17 +6,35 @@ import time
 from datetime import date
 from ..dataclasses.User import Elector, Voter
 from ..dataclasses.API import Api
+import sqlite3 as sl
 import asyncio
 
 from config.config import setupLogging
 from logging import getLogger
 logger = getLogger(__name__)
-setupLogging(logger)
+setupLogging(logger,True)
+
+def recoverFromStartup(self,elector):
+    loop = asyncio.get_event_loop()
+    loop.create_task(self.continueVote())
+    v= elector.get_vote_count()
+    Api.postVote(v["yay"], v["nay"])
+    
 
 class Events(Cog):
+    db = None#sl.connect('burbVote.db')
+    
     def __init__(self,bot):
         self.bot = bot
-
+        
+        Elector.db =sl.connect('burbVote.db')
+        Elector.db.row_factory =sl.Row
+        
+        id =Elector.get_active_vote()
+        if(id is not None):
+            active =Elector(id)
+            recoverFromStartup(self,active)
+    
     @commands.Cog.listener()
     async def on_member_join(self, member):
         guild = member.guild
@@ -67,8 +85,8 @@ class Events(Cog):
             await reaction.remove(user)
 
             if(self.bot.elector.quickVote is True):
-                await asyncio.sleep(60*3)#secret 3 minute wait for quick voters
-                if(self.checkVoteFinished(self.bot.elector)):
+                await asyncio.sleep(3)#secret 3 minute wait for quick voters
+                if(await self.checkVoteFinished(self.bot.elector)):
                     await Api.sendInvite(self.bot.elector.id,
                     self.bot.addMemberToGuild(self.bot.elector.id))
 
@@ -137,14 +155,14 @@ class Events(Cog):
         pass
 
     async def on_voteBot_reaction(self, vote, msg, mention):
-        if(vote == Vote.NAY):
+        if(vote == Vote.NAY.value):
             await msg.channel.send(f"User has been DENIED by {mention}\nIf you want to give a reason do `!vdeny [discord name] [optional reason denied]` ")
             await self.webhookMSG.delete()
             self.webhookMSG = None
             pass
-        logger.debug(str(vote))
+        print(f"Vote Emoji '{str(vote)}'")
         quick = " "
-        if(vote == Vote.QUE):
+        if(vote == Vote.QUE.value):
             quick =" quick "
         await msg.channel.send(f"User has been{quick}approved by {mention},{quick}vote starting...")
         self.bot.elector = self.pullDataFromMessage(msg)
@@ -154,39 +172,69 @@ class Events(Cog):
     
     async def startVote(self):
         channel =await self.bot.fetch_channel(self.bot.config.VOTING_CHANNEL)
+        self.bot.elector.save()
         self.bot.elector.start_vote()
         self.voteMSG = await channel.send(
             embed=self.bot.elector.voteEmbeddedMessage(self.bot),
             content=self.bot.config.VOTE_PING+f"\n[0] {Vote.YAY.value}  [0] {Vote.NAY.value}"
             )
-        await self.voteMSG.add_reaction(Vote.YAY.value)
-        await self.voteMSG.add_reaction(Vote.NAY.value)
+        
+        await self.continueVote(self.voteMSG)
+        pass
+     
+    async def continueVote(self, message):
+        await message.add_reaction(Vote.YAY.value)
+        await message.add_reaction(Vote.NAY.value)
+        
+        print("URL: "+self.bot.elector.imgUrl)
         Api.startVote(
             id=self.bot.elector.id,
             avatar=self.bot.elector.imgUrl,
             name=self.bot.elector.name)
-        pass
+        
+        await self.endVote()
+        
+    
+    async def endVote(self):
+        print("Going to sleep")
+        await asyncio.sleep(24*60)#*60
+        print("Done sleeping")
+        self.bot.elector.approved =self.checkVoteFinished(self.bot.elector)
+        
+        emb =await self.bot.elector.voteFinishMessage(self.bot,self.voteMSG.channel)
+        print(f"Approved = {self.bot.elector.approved}, "+str(emb))
+       
+        await self.voteMSG.channel.send(
+            embed=emb,
+            content=self.bot.config.VOTE_PING+f"\n[0] {Vote.YAY.value}  [0] {Vote.NAY.value}"
+            )
+        print("Message Sent")
     
     def pullDataFromMessage(self,message):
-        title = message.embeds[0].title
+        title = message.embeds[0].title.replace('\n','')
         username = self.findBetween(title,"Needs Approval "," AKA (")
         nickName = self.findBetween(title," AKA (",")")
 
-        lines = message.embeds[0].description.split("\n")
-        relation = lines[0][len("Knows: "):]
-        id = self.findBetween(lines[1].strip(),"||ID: ","||")
-        url = self.findBetween(lines[2].strip(),"||","]||")
+        lines = str(message.embeds[0].description.split('\n'))
+        relation = lines[len("Knows: "):]
+        id = int(self.findBetween(lines,"||ID: ","||"))
+        url = self.findBetween(lines,"||https://cdn.discordapp.com/avatars/"+str(id)+"/",".png?size=128")
 
+        logger.debug(lines)
+        logger.debug("ID-"+str(id))
         logger.debug("TITLE-"+title)
         logger.debug("DESC-"+str(lines))
+        logger.debug("URL-"+str(url))
         
-        elector = Elector(id)
+        elector = Elector(int(id))
         elector.imgUrl = url
         elector.vote_date = str(date.today())
         elector.name = username
         elector.nickName = nickName
         elector.description = message.content
         elector.approved = False
+        elector.messageid = message.id
+        elector.relationships =relation
 
         logger.debug(str(elector))
         return elector
@@ -196,18 +244,20 @@ class Events(Cog):
             start = s.index( first ) + len( first )
             end = s.index( last, start )
             return s[start:end]
-        except ValueError:
-            return ""
+        except ValueError as e:
+            raise e
 
     def checkVoteFinished(self, elector):
-        votes = elector.getVotes()
-        positive, negative = [votes["Check"], votes["Cross"]]
+        votes =elector.get_vote_count()
+        positive, negative = [votes["yay"], votes["nay"]]
+        logger.info(f"{'(Quick) ' if elector.quickVote else ''}Votes Yay: {positive}, Votes Nay: {negative}")
         if(elector.quickVote and negative == 0):
-            if(positive > self.bot.min_quick_vote):
+            if(positive > self.bot.config.min_quick_vote):
                 return True
 
-        return positive > self.bot.min_vote and \
-           positive - negative > self.bot.min_approve
+        print(f"Positive {positive} >= min_vote and difference {positive - negative} >= {self.bot.config.min_approve}")
+        return positive >= self.bot.config.min_vote and \
+           positive - negative >= self.bot.config.min_approve
 
 
 def setup(bot):

@@ -1,6 +1,5 @@
 from datetime import datetime
 from discord import Embed, Colour
-import json
 from bot.dataclasses.Vote import Vote
 import sqlite3 as sl
 
@@ -91,8 +90,7 @@ class Voter(User):
 #Person who is currently being voted on
 class Elector(Voter):
 
-    db =sl.connect('burbVote.db')
-    db.row_factory = sl.Row
+    db = None#sl.connect('burbVote.db')
 
     def __init__(self, id):
         super().__init__(id)
@@ -104,6 +102,7 @@ class Elector(Voter):
         self.relationships = "Nobody loves me" #people they know from the server
         self.quickVote = False
         self.messageid = 0
+        self.inviteLink =None
 
         con = Elector.db.cursor()
         con.execute("""CREATE TABLE IF NOT EXISTS elector (
@@ -117,7 +116,8 @@ class Elector(Voter):
                 [description] TEXT,
                 relationships TEXT,
                 quick INTEGER,
-                messageId INTEGER
+                messageId INTEGER,
+                inviteLink TEXT
             );""")
 
         self.id = id
@@ -150,6 +150,8 @@ class Elector(Voter):
         self.description = elector["description"]
         self.relationships = elector["relationships"]
         self.quickVote =elector["quick"] == 1
+        self.messageId = elector["messageId"]
+        self.inviteLink = elector["inviteLink"]
         
 
     def __repr__(self):
@@ -171,12 +173,13 @@ class Elector(Voter):
                         isApproved=?,electionsHeld=?,vote_date=?,[name]=?,imgUrl=?,nickName=?,[description]=?,relationships=?,quick=?,messageId=?
                         WHERE id = ?
                         """,(self.approved,existing["electionsHeld"]+1,self.vote_date,self.name,self.imgUrl,self.nickName,self.description,self.relationships,self.quickVote,str(self.id),self.messageid))
+        Elector.db.commit()
 
     def voteEmbeddedMessage(self,bot):
         embedthing = Embed(title=f"VOTE: {self.name} ({self.nickName})",
             description=f"\nDescription: {self.description}\n\
                 \nReact with {Vote.YAY.value} if you want them\nReact with {Vote.NAY.value} if you don't",colour=Colour.blue())
-        embedthing.set_thumbnail(url="https://cdn.discordapp.com/avatars/"+self.id+"/"+self.imgUrl+".png?size=128")
+        embedthing.set_thumbnail(url="https://cdn.discordapp.com/avatars/"+str(self.id)+"/"+str(self.imgUrl)+".png?size=128")
         return embedthing
     
     async def voteFinishMessage(self,bot,channel):
@@ -194,7 +197,7 @@ class Elector(Voter):
         embedthing = Embed(title=f"Voting has ended for {self.name} ({self.nickName})",
         description=f"Result: {Vote.YAY.value}[**{endVotes['yay']}**] | {Vote.NAY.value}[**{endVotes['nay']}**]\n\
             \n{message}",colour=Colour.blue())
-        embedthing.set_thumbnail(url=self.imgUrl)
+        embedthing.set_thumbnail(url="https://cdn.discordapp.com/avatars/"+self.id+"/"+self.imgUrl+".png?size=128")
         return embedthing
 
     def start_vote(self):
@@ -208,6 +211,7 @@ class Elector(Voter):
         
         con.execute("""DELETE FROM vote
                     WHERE elector = ?""",(str(self.id),))
+        Elector.db.commit()
         pass
     
     def add_vote(self,positiveVote, user):
@@ -215,11 +219,13 @@ class Elector(Voter):
         con = Elector.db.cursor()
         con.execute("""INSERT INTO vote ( voterid, elector, yay) values(?, ?, ?);""",
                     (str(user.id),str(self.id), positiveVote))
+        Elector.db.commit()
     
     def remove_vote(self,positiveVote, user):
         con = Elector.db.cursor()
         con.execute("""DELETE FROM vote
                         WHERE voterid = ?;""",(user.id,))
+        Elector.db.commit()
 
     def get_vote_count(self):
         con = Elector.db.cursor()
@@ -227,6 +233,7 @@ class Elector(Voter):
                     WHERE elector = ?
                     GROUP BY yay
                     ORDER BY yay;""",(self.id,)).fetchall()
+        Elector.db.commit()
 
         voteCount ={"yay":0,"nay":0}
         

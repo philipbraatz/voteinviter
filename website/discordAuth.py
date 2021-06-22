@@ -10,28 +10,31 @@ import asyncio
 class DiscordAuth(object):
     DISCORD_API ="https://discord.com/api/"
 
-
     client_id = int(getenv("CLIENT_ID",""))
     client_secret = getenv("OAUTH_CLIENT_TOKEN","")
     webhook_id = int(getenv("WEBHOOK_ID",""))
     webhook_secret = getenv("WEBSITE_SECRET_KEY","")
     scope = "identify%20guilds.join"
-    redirect_uri = "http://burbscanvote.tk/discordlogin"#TODO - check if development 
-    discord_login_url = DISCORD_API+"oauth2/authorize?client_id={}&redirect_uri={}&response_type=code&scope={}".format(client_id,redirect_uri,scope)
+    redirect_uri = "http://burbscanvote.tk/"#TODO - check if development
     discord_token_url = DISCORD_API+"oauth2/token"
     discord_webhook_url = DISCORD_API+"webhooks/{}/{}".format(webhook_id,webhook_secret)
     @staticmethod
     def getProfileImage(profile_id,avatar_id,size =128):
         return "https://cdn.discordapp.com/avatars/{}/{}.png?size={}".format(profile_id,avatar_id,size)
+    
+    @staticmethod
+    def getRedirectURL( redirect):
+        return DiscordAuth.DISCORD_API+"oauth2/authorize?client_id={}&redirect_uri={}{}&response_type=code&scope={}"\
+            .format(DiscordAuth.client_id,DiscordAuth.redirect_uri,redirect,DiscordAuth.scope)
 
     @staticmethod
-    def get_access_token(code):
+    def get_access_token(code, redirect):
         data = {
             'client_id': DiscordAuth.client_id,
             'client_secret': DiscordAuth.client_secret,
             'grant_type': 'authorization_code',
             'code': code,
-            'redirect_uri': DiscordAuth.redirect_uri,
+            'redirect_uri': DiscordAuth.redirect_uri+redirect,
             'scope': "identify guilds.join"
         }
         headers = {
