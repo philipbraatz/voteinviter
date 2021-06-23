@@ -3,9 +3,9 @@ from enum import Enum
 
 class Vote(Enum):
     NONE = None
-    YAY  = "\u2705"
-    NAY  = "\u274C"
-    QUE  = "\u2753"
+    YAY = "\u2705"
+    NAY = "\u274C"
+    QUE = "\u2753"
 
     def __new__(cls, value):
         member = object.__new__(cls)
@@ -17,8 +17,7 @@ class Vote(Enum):
     pass
 
     @staticmethod
-    def isVote(emoji):
+    def IsVote(emoji):
         return emoji == Vote.YAY.value or \
-               emoji == Vote.NAY.value or \
-               emoji == Vote.QUE.value
-    
+            emoji == Vote.NAY.value or \
+            emoji == Vote.QUE.value

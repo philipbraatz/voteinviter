@@ -1,8 +1,9 @@
-from os import getcwd, getenv, environ
-from os.path import isfile
 import configparser
 import json
 import logging
+from os import environ, getcwd, getenv
+from os.path import isfile
+
 
 class WebsiteConfig:
     def __init__(self):
@@ -144,7 +145,8 @@ class PrivateConfig:
                 environ[key] = value.strip()
                 setattr(self, key, value.strip())
 
-def setupLogging(logger,debug=False):
+def SetupLogging(name,debug=False):
+    logger = logging.getLogger(name)
     if(debug):
         logger.setLevel(logging.DEBUG)
     else:
@@ -158,9 +160,9 @@ def setupLogging(logger,debug=False):
         ch.setLevel(logging.INFO)
 
     # create formatter
-    formatter = logging.Formatter('%(name)s - %(levelname)s: %(message)s')#'%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    formatter = logging.Formatter('%(name)s| %(levelname)s:\t%(message)s')#'%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+    return logger
 
-logger = logging.getLogger(__name__)
-setupLogging(logger)
+logger = SetupLogging(__name__)

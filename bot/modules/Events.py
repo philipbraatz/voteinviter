@@ -1,24 +1,25 @@
-from bot.dataclasses.Vote import Vote
-from discord.ext.commands import Cog
-from discord.ext import commands
-from ..__init__ import PRIVATECONFIG
+import asyncio
+import sqlite3 as sl
 import time
 from datetime import date
+
+from bot.dataclasses.Vote import Vote
+from config.config import SetupLogging
+from discord.ext import commands
+from discord.ext.commands import Cog
+
+from ..__init__ import PRIVATECONFIG
 from ..dataclasses.User import Elector, Voter
-from ..dataclasses.API import Api
-import sqlite3 as sl
-import asyncio
+from .dataclasses.ApiHelper import ApiHelper
 
-from config.config import setupLogging
-from logging import getLogger
-logger = getLogger(__name__)
-setupLogging(logger,True)
+logger = SetupLogging(__name__,True)
 
-def recoverFromStartup(self,elector):
+
+def RecoverFromStartup(self,elector):
     loop = asyncio.get_event_loop()
     loop.create_task(self.continueVote())
     v= elector.get_vote_count()
-    Api.postVote(v["yay"], v["nay"])
+    ApiHelper.postVote(v["yay"], v["nay"])
     
 
 class Events(Cog):
@@ -33,7 +34,7 @@ class Events(Cog):
         id =Elector.get_active_vote()
         if(id is not None):
             active =Elector(id)
-            recoverFromStartup(self,active)
+            RecoverFromStartup(self,active)
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -78,7 +79,7 @@ class Events(Cog):
 
                 self.bot.elector.add_vote(reaction.emoji == Vote.YAY.value,voter)
                 votes =self.bot.elector.get_vote_count()
-                Api.postVote(votes['yay'],votes['nay'])
+                ApiHelper.postVote(votes['yay'],votes['nay'])
 
                 await self.voteMSG.edit(content =f"\n[{votes['yay']}] {Vote.YAY.value}  [{votes['nay']}] {Vote.NAY.value}")
             
@@ -87,7 +88,7 @@ class Events(Cog):
             if(self.bot.elector.quickVote is True):
                 await asyncio.sleep(3)#secret 3 minute wait for quick voters
                 if(await self.checkVoteFinished(self.bot.elector)):
-                    await Api.sendInvite(self.bot.elector.id,
+                    await ApiHelper.sendInvite(self.bot.elector.id,
                     self.bot.addMemberToGuild(self.bot.elector.id))
 
     @commands.Cog.listener()
@@ -106,7 +107,7 @@ class Events(Cog):
 
                 self.bot.elector.remove_vote(reaction.emoji == Vote.YAY.value,voter)
                 votes =self.bot.elector.get_vote_count()
-                Api.postVote(votes['yay'],votes['nay'])
+                ApiHelper.postVote(votes['yay'],votes['nay'])
 
                 await self.voteMSG.edit(content =f"\n[{votes['yay']}] {Vote.YAY.value}  [{votes['nay']}] {Vote.NAY.value}")
                 pass
@@ -117,9 +118,9 @@ class Events(Cog):
     async def on_message(self,message):
         if(message.author.id == int(PRIVATECONFIG.WEBHOOK_ID)):
             self.webhookMSG = message
-            await self.on_webhook_message()
+            await self.On_webhook_message()
 
-    async def on_webhook_message(self):
+    async def On_webhook_message(self):
         await self.webhookMSG.add_reaction(Vote.YAY.value)
         await self.webhookMSG.add_reaction(Vote.NAY.value)
         await self.webhookMSG.add_reaction(Vote.QUE.value)
@@ -128,7 +129,7 @@ class Events(Cog):
         #for em in message.embeds:
             #logger.debug("Title: "+str(em.title))
 
-        def check(reaction, user):
+        def Check(reaction, user):
             #logger.debug(f"Message: {reaction.message}\nID:{user.id}\nReaction:{reaction.emoji}")
             return reaction.message == self.webhookMSG and \
                 user.id != int(PRIVATECONFIG.CLIENT_ID) and \
@@ -139,7 +140,7 @@ class Events(Cog):
 
         hits = 0
         try:
-            reaction, user = await self.bot.wait_for("reaction_add",timeout=60.0*60.0*4,check=check)#TODO timeout set in config
+            reaction, user = await self.bot.wait_for("reaction_add",timeout=60.0*60.0*4,check=Check)#TODO timeout set in config
         except Exception as e:
             hits+=1
             if(hits >= 1):
@@ -179,15 +180,15 @@ class Events(Cog):
             content=self.bot.config.VOTE_PING+f"\n[0] {Vote.YAY.value}  [0] {Vote.NAY.value}"
             )
         
-        await self.continueVote(self.voteMSG)
+        await self.ContinueVote(self.voteMSG)
         pass
      
-    async def continueVote(self, message):
+    async def ContinueVote(self, message):
         await message.add_reaction(Vote.YAY.value)
         await message.add_reaction(Vote.NAY.value)
         
         print("URL: "+self.bot.elector.imgUrl)
-        Api.startVote(
+        ApiHelper.startVote(
             id=self.bot.elector.id,
             avatar=self.bot.elector.imgUrl,
             name=self.bot.elector.name)
@@ -195,7 +196,7 @@ class Events(Cog):
         await self.endVote()
         
     
-    async def endVote(self):
+    async def EndVote(self):
         print("Going to sleep")
         await asyncio.sleep(24*60)#*60
         print("Done sleeping")
@@ -210,7 +211,7 @@ class Events(Cog):
             )
         print("Message Sent")
     
-    def pullDataFromMessage(self,message):
+    def PullDataFromMessage(self,message):
         title = message.embeds[0].title.replace('\n','')
         username = self.findBetween(title,"Needs Approval "," AKA (")
         nickName = self.findBetween(title," AKA (",")")
@@ -233,13 +234,13 @@ class Events(Cog):
         elector.nickName = nickName
         elector.description = message.content
         elector.approved = False
-        elector.messageid = message.id
+        elector.messageId = message.id
         elector.relationships =relation
 
         logger.debug(str(elector))
         return elector
     
-    def findBetween(self,s,first,last):
+    def FindBetween(self,s,first,last):
         try:
             start = s.index( first ) + len( first )
             end = s.index( last, start )
@@ -247,7 +248,7 @@ class Events(Cog):
         except ValueError as e:
             raise e
 
-    def checkVoteFinished(self, elector):
+    def CheckVoteFinished(self, elector):
         votes =elector.get_vote_count()
         positive, negative = [votes["yay"], votes["nay"]]
         logger.info(f"{'(Quick) ' if elector.quickVote else ''}Votes Yay: {positive}, Votes Nay: {negative}")

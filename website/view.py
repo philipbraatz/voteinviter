@@ -1,18 +1,20 @@
-from flask import Blueprint, render_template, redirect, request, session, url_for
-from flask_login import login_required, current_user
-from pathlib import Path
-from .discordAuth import DiscordAuth
-import aiohttp
 import asyncio
-from __init__ import PRIVATECONFIG
-from .Database import *
-from pywebpush import webpush, WebPushException
 from datetime import datetime
+from pathlib import Path
 
-from config.config import setupLogging
-from logging import getLogger
-logger = getLogger(__name__)
-setupLogging(logger)
+import aiohttp
+from config.config import SetupLogging
+from flask import (Blueprint, redirect, render_template, request, session,
+                   url_for)
+from flask_login import current_user, login_required
+from pywebpush import WebPushException, webpush
+
+from __init__ import PRIVATECONFIG
+
+from .Database import GetLastDayResult, GetLastVoteResult
+from .discordAuth import DiscordAuth
+
+logger = SetupLogging(__name__)
 
 
 views = Blueprint('views',__name__)
@@ -30,17 +32,17 @@ def internalRender(file):
 @views.route('/index')
 @views.route('/index/')
 @views.route('/')
-def index():
+def Index():
     
     global myValues
     
-    vote = getLastDayResult()
+    vote = GetLastDayResult()
     if(vote is not None):
         myValues = vote
         vote = True
         print("Got Day")
     else:
-        temp = getLastVoteResult()
+        temp = GetLastVoteResult()
         print("Last vote value: "+str(temp))
         if(temp != None):
             myValues = temp
@@ -81,19 +83,19 @@ def index():
 
 @views.route('/login/')
 @views.route('/login')
-def login():
+def Login():
     return redirect(DiscordAuth.getRedirectURL("login/discord"))
 
 @views.route('/signup/')
 @views.route('/signup')
-def signup():
-    if(getLastDayResult() is None):
+def Signup():
+    if(GetLastDayResult() is None):
         return redirect(DiscordAuth.getRedirectURL("signup/discord"))
     else:
         return ("Vote is active, you must wait the vote to be over",403)
 
 @views.route('/login/discord', methods = ['GET', 'POST'])
-def loginDiscord(): 
+def LoginDiscord(): 
     
     code = request.args.get('code')
     #try:
@@ -112,8 +114,8 @@ def loginDiscord():
     #    return redirect(url_for(".login"))#try again
 
 @views.route('/signup/discord', methods = ['GET', 'POST'])
-def signupDiscord(): 
-    if(getLastDayResult() is not None):
+def SignupDiscord(): 
+    if(GetLastDayResult() is not None):
         return ("Vote is active, you must wait the vote to be over",403)
     
     code = request.args.get('code')
@@ -134,8 +136,8 @@ def signupDiscord():
         return e#redirect(DiscordAuth.getRedirectURL())
 
 @views.route('/request', methods=['POST'])
-def requestvote():
-    if(getLastDayResult() is not None):
+def Requestvote():
+    if(GetLastDayResult() is not None):
         return("Vote is active, you must wait the vote to be over",403)
     
     user = session.get('user',False)
@@ -146,7 +148,7 @@ def requestvote():
     return redirect("/index?vote")
 
 @views.route('api/sendvote', methods=['POST'])
-def sendvote():
+def Sendvote():
     global myValues
     secret = request.args.get('secret')
     if (secret == PRIVATECONFIG.API_KEY):
@@ -155,7 +157,7 @@ def sendvote():
     return "I am text"
 
 @views.route('api/startvote', methods=['POST'])
-def startvote():
+def Startvote():
     global myValues
     secret = request.args.get('secret')
     if (secret == PRIVATECONFIG.API_KEY):
@@ -170,11 +172,11 @@ def startvote():
 
 @views.route('/profile')
 @login_required
-def profile():
+def Profile():
     return "Members only club "+ current_user.is_authenticated
 
 @views.route('/subscription',methods=['GET', 'POST'])
-def subscription():
+def Subscription():
     pass
 
 @views.route('/push', methods=['POST'])
@@ -182,7 +184,7 @@ def push():
     pass
 
 
-def send_web_push(subscription_information, message_body):
+def Send_web_push(subscription_information, message_body):
     return webpush(
         subscription_info=subscription_information,
         data=message_body,
