@@ -3,6 +3,7 @@ title Vote Inviter
 
 pip install -r requirements.txt
 
-python src/main.py
+python app.py web
+python app.py bot
 
 pause
